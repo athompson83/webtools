@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "packageManager": "pnpm@10.14.0",
+  "engines": {
+    "node": ">=22 <23",
+    "pnpm": ">=10.14 <11"
+  },
   "scripts": {
     "dev:groundexact": "pnpm --filter @webtools/groundexact dev",
     "create:site": "node scripts/create-site.mjs",
