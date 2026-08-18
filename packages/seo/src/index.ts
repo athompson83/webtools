@@ -18,8 +18,15 @@ export interface RobotsPolicyInput {
   sitemapPath?: string;
 }
 
+function sameOriginUrl(origin: string, pathname: string, label: string): URL {
+  const base = new URL(origin);
+  const url = new URL(pathname, base);
+  if (url.origin !== base.origin) throw new RangeError(`${label} must remain on the configured origin.`);
+  return url;
+}
+
 export function buildCanonicalUrl(origin: string, pathname: string): string {
-  const url = new URL(pathname, origin);
+  const url = sameOriginUrl(origin, pathname, 'canonical URL');
   url.search = '';
   url.hash = '';
   return url.toString();
@@ -64,7 +71,7 @@ export function buildFaqSchema(items: Array<{ question: string; answer: string }
 export function buildRobotsTxt(input: RobotsPolicyInput): string {
   const origin = new URL(input.origin);
   const sitemapPath = input.sitemapPath ?? '/sitemap.xml';
-  const sitemapUrl = new URL(sitemapPath, origin.origin).toString();
+  const sitemapUrl = sameOriginUrl(origin.origin, sitemapPath, 'sitemap URL').toString();
   const generalDirective = input.allowSearchIndexing ? 'Allow: /' : 'Disallow: /';
   const oaiDirective = input.allowOaiSearchBot ? 'Allow: /' : 'Disallow: /';
   const gptDirective = input.allowGptBot ? 'Allow: /' : 'Disallow: /';
