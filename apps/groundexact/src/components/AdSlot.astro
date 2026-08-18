@@ -1,0 +1,41 @@
+---
+import { validateAdSlot } from '@webtools/monetization';
+import { siteConfig } from '../../site.config';
+
+interface Props {
+  slotKey: string;
+  minWidth?: number;
+  minHeight?: number;
+  placement?: 'after-result' | 'between-sections' | 'sidebar' | 'footer';
+}
+
+const {
+  slotKey,
+  minWidth = 300,
+  minHeight = 250,
+  placement = 'between-sections',
+} = Astro.props;
+
+const slot = validateAdSlot({ key: slotKey, minWidth, minHeight, placement });
+const enabled = siteConfig.ads.enabled && siteConfig.ads.provider !== 'none';
+---
+{enabled && (
+  <aside
+    class="ad-shell"
+    aria-label="Advertisement"
+    data-ad-slot={slot.key}
+    data-ad-provider={siteConfig.ads.provider}
+    data-ad-placement={slot.placement}
+    style={`--ad-min-width:${slot.minWidth}px;--ad-min-height:${slot.minHeight}px`}
+  >
+    <span class="ad-label">Advertisement</span>
+    <div class="ad-reserved" aria-hidden="true"></div>
+  </aside>
+)}
+
+<style>
+  .ad-shell { width: 100%; margin-block: 2rem; text-align: center; }
+  .ad-label { display: block; margin-bottom: .35rem; color: var(--muted-text); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }
+  .ad-reserved { width: min(100%, max(var(--ad-min-width), 60%)); min-height: var(--ad-min-height); margin-inline: auto; }
+  @media print { .ad-shell { display: none; } }
+</style>
