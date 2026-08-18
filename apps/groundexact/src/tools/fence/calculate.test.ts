@@ -26,4 +26,9 @@ describe('calculateFence', () => {
       gateWidthsFt: [12],
     })).toThrow(RangeError);
   });
+
+  it('rejects negative gate widths and non-integer component counts', () => {
+    expect(() => calculateFence({ runLengthFt: 80, panelWidthFt: 8, railsPerPanel: 2, picketsPerPanel: 16, gateWidthsFt: [-4] })).toThrow(/gate 1 width/i);
+    expect(() => calculateFence({ runLengthFt: 80, panelWidthFt: 8, railsPerPanel: 2.5, picketsPerPanel: 16, gateWidthsFt: [] })).toThrow(/rails per panel/i);
+  });
 });
