@@ -1,0 +1,12 @@
+{
+  "sites": [
+    {
+      "key": "groundexact",
+      "name": "GroundExact",
+      "appDir": "apps/groundexact",
+      "packageName": "@webtools/groundexact",
+      "productionOrigin": "https://groundexact.com",
+      "status": "mvp"
+    }
+  ]
+}
