@@ -1,8 +1,9 @@
-export type ConsentState = 'unknown' | 'granted' | 'denied' | 'not-required';
+import { canActivateOptionalFeature, type ConsentState } from '@webtools/compliance';
 
 export interface AdvertisingDecisionInput {
   adsEnabled: boolean;
   consent: ConsentState;
+  consentRequired?: boolean;
 }
 
 export interface AdSlotDefinition {
@@ -13,8 +14,11 @@ export interface AdSlotDefinition {
 }
 
 export function canRenderAdvertising(input: AdvertisingDecisionInput): boolean {
-  if (!input.adsEnabled) return false;
-  return input.consent === 'granted' || input.consent === 'not-required';
+  return canActivateOptionalFeature({
+    enabled: input.adsEnabled,
+    consentRequired: input.consentRequired ?? true,
+    consent: input.consent,
+  });
 }
 
 export function validateAdSlot<T extends AdSlotDefinition>(slot: T): T {
