@@ -1,0 +1,26 @@
+{
+  "name": "@webtools/replace-site-key",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "astro check",
+    "lint": "eslint src site.config.ts --max-warnings=0"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.5.0",
+    "@webtools/calculator-core": "workspace:*",
+    "@webtools/seo": "workspace:*",
+    "@webtools/site-config": "workspace:*",
+    "astro": "^5.13.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}
