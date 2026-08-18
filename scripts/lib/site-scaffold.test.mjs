@@ -43,7 +43,7 @@ test('requires a basic contact email', () => {
   }), /contact email/);
 });
 
-test('scaffolds an isolated app and registers it in the portfolio manifest', () => {
+test('scaffolds an isolated app with legal/runtime defaults and registers it in the portfolio manifest', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'webtools-site-'));
   try {
     fs.mkdirSync(path.join(root, 'portfolio'), { recursive: true });
@@ -65,11 +65,42 @@ test('scaffolds an isolated app and registers it in the portfolio manifest', () 
       contactEmail: 'hello@restaurantmath.com',
     });
 
-    assert.equal(fs.existsSync(path.join(root, 'apps', 'restaurantmath', 'src', 'pages', 'robots.txt.ts')), true);
-    assert.equal(fs.existsSync(path.join(root, 'apps', 'restaurantmath', 'src', 'pages', 'sitemap.xml.ts')), true);
-    const config = fs.readFileSync(path.join(root, 'apps', 'restaurantmath', 'site.config.ts'), 'utf8');
+    const appRoot = path.join(root, 'apps', 'restaurantmath');
+    for (const relative of [
+      'src/pages/robots.txt.ts',
+      'src/pages/sitemap.xml.ts',
+      'src/pages/404.astro',
+      'src/pages/[slug].astro',
+      'src/content/static-pages.ts',
+      'src/config/runtime-data.ts',
+      'src/tools/registry.ts',
+      'src/layouts/ToolPageLayout.astro',
+      'src/components/ToolActions.astro',
+      'src/components/AdSlot.astro',
+    ]) {
+      assert.equal(fs.existsSync(path.join(appRoot, relative)), true, `${relative} should exist`);
+    }
+
+    const config = fs.readFileSync(path.join(appRoot, 'site.config.ts'), 'utf8');
     assert.match(config, /allowSearchIndexing: false/);
     assert.match(config, /https:\/\/restaurantmath\.com/);
+
+    const baseLayout = fs.readFileSync(path.join(appRoot, 'src', 'layouts', 'BaseLayout.astro'), 'utf8');
+    assert.match(baseLayout, /href="\/privacy"/);
+    assert.match(baseLayout, /href="\/terms"/);
+    assert.match(baseLayout, /href="\/cookies"/);
+    assert.match(baseLayout, /href="\/advertising-disclosure"/);
+    assert.match(baseLayout, /href="\/accessibility"/);
+
+    const staticPages = fs.readFileSync(path.join(appRoot, 'src', 'content', 'static-pages.ts'), 'utf8');
+    for (const slug of ['about', 'methodology', 'contact', 'privacy', 'terms', 'cookies', 'advertising-disclosure', 'accessibility']) {
+      assert.match(staticPages, new RegExp(`slug: '${slug}'`));
+    }
+
+    const packageSource = fs.readFileSync(path.join(appRoot, 'package.json'), 'utf8');
+    assert.match(packageSource, /@webtools\/compliance/);
+    assert.match(packageSource, /@webtools\/monetization/);
+    assert.match(packageSource, /@webtools\/tool-catalog/);
 
     const manifest = JSON.parse(fs.readFileSync(path.join(root, 'portfolio', 'sites.json'), 'utf8'));
     assert.equal(manifest.sites.length, 2);
