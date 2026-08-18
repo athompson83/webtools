@@ -44,6 +44,18 @@ describe('SEO helpers', () => {
     expect(robots).toContain('Sitemap: https://groundexact.com/sitemap.xml');
   });
 
+  it('blocks search discovery crawlers when global indexing is disabled', () => {
+    const robots = buildRobotsTxt({
+      origin: 'https://preview.example.com',
+      allowSearchIndexing: false,
+      allowOaiSearchBot: true,
+      allowGptBot: true,
+    });
+    expect(robots).toContain('User-agent: *\nDisallow: /');
+    expect(robots).toContain('User-agent: OAI-SearchBot\nDisallow: /');
+    expect(robots).toContain('User-agent: GPTBot\nAllow: /');
+  });
+
   it('builds XML sitemap entries from canonical absolute URLs', () => {
     const sitemap = buildSitemapXml([
       'https://groundexact.com/',
