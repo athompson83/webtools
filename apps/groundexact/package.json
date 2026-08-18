@@ -12,7 +12,6 @@
     "lint": "eslint src site.config.ts --max-warnings=0"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.5.0",
     "@webtools/calculator-core": "workspace:*",
     "@webtools/seo": "workspace:*",
     "@webtools/site-config": "workspace:*",
