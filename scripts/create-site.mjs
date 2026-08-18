@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { scaffoldSite } from './lib/site-scaffold.mjs';
+import { scaffoldCompleteSite } from './lib/complete-site-scaffold.mjs';
 
 function parseArgs(argv) {
   const values = {};
@@ -21,7 +21,7 @@ const rootDir = path.resolve(here, '..');
 
 try {
   const args = parseArgs(process.argv.slice(2));
-  const result = scaffoldSite(rootDir, {
+  const result = scaffoldCompleteSite(rootDir, {
     key: args.key,
     name: args.name,
     domain: args.domain,
@@ -30,7 +30,7 @@ try {
 
   console.log(`Created ${result.name} at ${result.appDir}`);
   console.log(`Domain: ${result.domain}`);
-  console.log('Search indexing is disabled by default. Build real tools/content and pass publication gates before enabling it.');
+  console.log('Search indexing and advertising are disabled by default. Build real tools/content, configure legal/runtime behavior, and pass publication gates before enabling them.');
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   console.error('Usage: pnpm create:site -- --key <site-key> --name "Site Name" --domain https://example.com --contact-email hello@example.com');
