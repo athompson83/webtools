@@ -11,18 +11,26 @@
 
 ### Calculator pages
 
-Only publish/index a calculator URL when the user-facing workflow, tested calculation engine, explanatory content, and QA are complete.
+A page file existing in the repository does not make a calculator certified for public/indexable release.
 
-- `/tools/mulch-calculator` — live
+Status meanings:
+
+- **page ready** — calculation engine and user-facing page exist; build/browser/publication certification still required.
+- **engine ready** — calculation engine exists; user-facing page still required.
+- **live** — all publication gates were actually executed and passed.
+
+Current state:
+
+- `/tools/mulch-calculator` — page ready; requires baseline/build certification and formula-deduplication refactor
+- `/tools/fertilizer-calculator` — page ready; uses production engine; requires baseline/build/browser certification
+- `/tools/cubic-yard-calculator` — page ready; uses production engine; requires baseline/build/browser certification
 - `/tools/gravel-calculator` — engine ready; page still required
 - `/tools/topsoil-calculator` — engine ready; page still required
 - `/tools/sod-calculator` — engine ready; page still required
 - `/tools/paver-calculator` — engine ready; page still required
 - `/tools/retaining-wall-calculator` — engine ready; page still required
 - `/tools/fence-calculator` — engine ready; page still required
-- `/tools/fertilizer-calculator` — engine ready; page still required
 - `/tools/grass-seed-calculator` — engine ready; page still required
-- `/tools/cubic-yard-calculator` — engine ready; page still required
 
 ### Legal/disclosure
 
@@ -32,6 +40,8 @@ Only publish/index a calculator URL when the user-facing workflow, tested calcul
 - `/advertising-disclosure`
 - `/accessibility`
 
+These routes contain implementation drafts and must be checked against the actual provider/data configuration plus legal review needs before monetized production launch.
+
 ## Calculator page content contract
 
 Every calculator page must contain, in this order where practical:
@@ -40,12 +50,12 @@ Every calculator page must contain, in this order where practical:
 2. One-sentence value proposition.
 3. Working calculator above the primary long-form explanation.
 4. Clear result hierarchy.
-5. Three-to-five-step usage instructions.
+5. Three-to-five-step usage instructions or equivalently clear inline guidance.
 6. Formula/methodology in crawlable text.
 7. Explanation of non-universal assumptions.
 8. At least one verified worked example.
 9. Genuine FAQs only when they help the user.
-10. Related tools that are already live.
+10. Related tools that are already certified live.
 11. Last-reviewed date.
 12. Sources when external claims or rates are used.
 
@@ -84,7 +94,7 @@ Primary intent: translate project dimensions into countable units and purchase q
 
 ## Internal linking
 
-Recommended contextual links:
+Recommended contextual links after both endpoints are certified live:
 
 - mulch ↔ cubic yards ↔ topsoil
 - gravel ↔ cubic yards ↔ pavers
@@ -132,13 +142,16 @@ FAQ structured data should only be emitted when the page visibly contains the sa
 
 ## Publication gate
 
-A calculator may move from `engine-ready` to `live` only after:
+A calculator may move to `live` only after:
 
 - UI uses the production calculation module rather than duplicating the formula.
-- Golden-case test exists.
-- Invalid-input behavior is verified.
-- Mobile flow is usable.
+- Golden-case test exists and passes.
+- Invalid-input behavior is tested and passes.
+- Full repository lint/typecheck/test/build gate passes at the exact commit.
+- Browser verification confirms the calculator works at target mobile and desktop widths.
+- Mobile flow is usable and keyboard flow has no material blocker.
 - Canonical URL is clean.
+- Sitemap/robots behavior is verified.
 - Page has methodology and reviewed date.
 - No invented supplier/product claims appear.
-- The URL builds successfully.
+- No broken related-tool links exist.
