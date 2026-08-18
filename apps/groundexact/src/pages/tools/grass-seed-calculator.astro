@@ -1,0 +1,113 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Grass Seed Calculator"
+  description="Estimate grass seed pounds and whole bags from lawn area, the application rate on your seed label, and bag weight."
+  pathname="/tools/grass-seed-calculator"
+  intro="Use the coverage rate printed on the seed product you actually plan to buy instead of relying on a universal seeding assumption."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact multiplies lawn area by the product-label application rate, then divides the required seed weight by the bag weight and rounds upward to whole bags."
+  relatedTools={[]}
+>
+  <form slot="calculator" data-seed-form novalidate>
+    <h2>Lawn and seed label</h2>
+    <div class="field-grid">
+      <label>Lawn area (sq ft)<input name="area" type="number" inputmode="decimal" min="0.01" step="1" value="5000" required /></label>
+      <label>Label rate (lb per 1,000 sq ft)<input name="rate" type="number" inputmode="decimal" min="0.01" step="0.1" value="5" required /></label>
+      <label>Bag weight (lb)<input name="bagWeight" type="number" inputmode="decimal" min="0.01" step="0.1" value="20" required /></label>
+    </div>
+    <p class="helper">Seed products can specify different rates for new lawns, overseeding, species, climate, and conditions. Enter the rate that applies to your project from the product label.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate grass seed</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Seed to buy</p>
+    <p class="result-primary"><span data-bags>2</span> bags</p>
+    <p>Whole bags required at the label rate and bag weight you entered.</p>
+    <ul class="result-list">
+      <li><span>Seed required</span><strong><span data-pounds>25.00</span> lb</strong></li>
+      <li><span>Coverage per bag</span><strong><span data-coverage>4,000</span> sq ft</strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>seed pounds = (area ÷ 1,000) × label rate</code></p>
+    <p><code>bags = ceiling(seed pounds ÷ bag weight)</code></p>
+    <p><code>coverage per bag = (bag weight ÷ label rate) × 1,000</code></p>
+    <p>This is a purchase-quantity calculator, not an agronomic recommendation. Follow the product label and relevant local guidance for seed selection, timing, preparation, irrigation, and application.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>5,000 sq ft at 5 lb per 1,000 sq ft</h2>
+    <p>The label rate requires 25 pounds of seed. With 20-pound bags, the project needs 2 whole bags. At that same rate, each 20-pound bag covers about 4,000 square feet.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculateGrassSeed } from '../../tools/grass-seed/calculate';
+
+  const form = document.querySelector('[data-seed-form]');
+  if (form instanceof HTMLFormElement) {
+    const errorOut = form.querySelector('[data-error]');
+    const bagsOut = document.querySelector('[data-bags]');
+    const poundsOut = document.querySelector('[data-pounds]');
+    const coverageOut = document.querySelector('[data-coverage]');
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateGrassSeed({
+          areaSqFt: Number(data.get('area')),
+          labelRateLbPer1000SqFt: Number(data.get('rate')),
+          bagWeightLb: Number(data.get('bagWeight')),
+        });
+
+        if (bagsOut) bagsOut.textContent = result.bagsNeeded.toLocaleString('en-US');
+        if (poundsOut) poundsOut.textContent = result.seedNeededLb.toFixed(2);
+        if (coverageOut) coverageOut.textContent = result.coveragePerBagSqFt.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        for (const name of ['area', 'rate', 'bagWeight']) url.searchParams.set(name, String(data.get(name)));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.'; }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['area', 'rate', 'bagWeight']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-seed-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 760px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
