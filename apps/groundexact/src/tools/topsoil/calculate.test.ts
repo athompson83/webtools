@@ -9,4 +9,12 @@ describe('calculateTopsoil', () => {
     expect(result.adjustedCuYd).toBeCloseTo(2.44444, 5);
     expect(result.recommendedOrderCuYd).toBe(2.5);
   });
+
+  it('rejects negative dimensions', () => {
+    expect(() => calculateTopsoil({ lengthFt: 30, widthFt: -1, depthInches: 2, wastePercent: 10, bulkIncrementCuYd: 0.25 })).toThrow(RangeError);
+  });
+
+  it('rejects non-positive supplier order increments', () => {
+    expect(() => calculateTopsoil({ lengthFt: 30, widthFt: 12, depthInches: 2, wastePercent: 10, bulkIncrementCuYd: 0 })).toThrow(RangeError);
+  });
 });
