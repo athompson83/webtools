@@ -69,10 +69,12 @@ test('scaffolds an isolated app with legal/runtime defaults and registers it in 
     for (const relative of [
       'src/pages/robots.txt.ts',
       'src/pages/sitemap.xml.ts',
+      'src/pages/ads.txt.ts',
       'src/pages/404.astro',
       'src/pages/[slug].astro',
       'src/content/static-pages.ts',
       'src/config/runtime-data.ts',
+      'src/config/advertising.ts',
       'src/tools/registry.ts',
       'src/layouts/ToolPageLayout.astro',
       'src/components/ToolActions.astro',
@@ -84,6 +86,10 @@ test('scaffolds an isolated app with legal/runtime defaults and registers it in 
     const config = fs.readFileSync(path.join(appRoot, 'site.config.ts'), 'utf8');
     assert.match(config, /allowSearchIndexing: false/);
     assert.match(config, /https:\/\/restaurantmath\.com/);
+
+    const advertising = fs.readFileSync(path.join(appRoot, 'src', 'config', 'advertising.ts'), 'utf8');
+    assert.match(advertising, /adsTxtRequired = true/);
+    assert.match(advertising, /adsTxtEntries: AdsTxtEntry\[\] = \[\]/);
 
     const baseLayout = fs.readFileSync(path.join(appRoot, 'src', 'layouts', 'BaseLayout.astro'), 'utf8');
     assert.match(baseLayout, /href="\/privacy"/);
