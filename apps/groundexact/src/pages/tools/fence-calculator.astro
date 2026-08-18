@@ -1,0 +1,134 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Fence Material Calculator"
+  description="Estimate fence panels, posts, rails, and pickets for a straight run while subtracting entered gate widths."
+  pathname="/tools/fence-calculator"
+  intro="Turn a straight fence run, panel width, and gate openings into a practical first-pass material count for a panel-based layout."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact subtracts the entered gate widths from the straight run, rounds the remaining fence length upward to whole panels, then derives posts, rails, and pickets from the panel layout values you enter."
+  relatedTools={[]}
+>
+  <form slot="calculator" data-fence-form novalidate>
+    <h2>Straight-run fence details</h2>
+    <div class="field-grid">
+      <label>Total run length (ft)<input name="runLength" type="number" inputmode="decimal" min="0.01" step="0.1" value="80" required /></label>
+      <label>Panel width (ft)<input name="panelWidth" type="number" inputmode="decimal" min="0.01" step="0.1" value="8" required /></label>
+      <label>Rails per panel<input name="rails" type="number" inputmode="numeric" min="0" step="1" value="2" required /></label>
+      <label>Pickets per panel<input name="pickets" type="number" inputmode="numeric" min="0" step="1" value="16" required /></label>
+      <label class="wide">Gate widths (ft, comma separated)<input name="gates" type="text" inputmode="decimal" value="4" placeholder="Example: 4 or 4, 10" /></label>
+    </div>
+    <p class="helper">This MVP estimates one straight run. Enter each gate opening width separated by commas. Corners, slopes, terminal-post rules, custom spacing, gate hardware, concrete, and local installation requirements are outside this first-pass quantity model.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate fence materials</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Panels needed</p>
+    <p class="result-primary"><span data-panels>10</span></p>
+    <p>Whole panels for the net straight-run length after subtracting gate openings.</p>
+    <ul class="result-list">
+      <li><span>Net fence length</span><strong><span data-net>76.00</span> ft</strong></li>
+      <li><span>Posts</span><strong><span data-posts>12</span></strong></li>
+      <li><span>Rails</span><strong><span data-rails>20</span></strong></li>
+      <li><span>Pickets</span><strong><span data-pickets>160</span></strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>net fence length = total straight run − total gate widths</code></p>
+    <p><code>panels = ceiling(net fence length ÷ panel width)</code></p>
+    <p><code>posts = panels + 1 + number of gate openings</code></p>
+    <p><code>rails = panels × rails per panel</code></p>
+    <p><code>pickets = panels × pickets per panel</code></p>
+    <p>The post formula provides an extra post allowance for each gate opening in this simplified straight-run model. Real installations can require different terminal, corner, gate, or reinforcement posts depending on the system.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>80 ft run with one 4 ft gate</h2>
+    <p>Subtracting a 4-foot gate leaves 76 feet of fence. With 8-foot panels, that rounds up to 10 panels. Using 2 rails and 16 pickets per panel produces 20 rails and 160 pickets, while the simplified post model estimates 12 posts.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculateFence } from '../../tools/fence/calculate';
+
+  const form = document.querySelector('[data-fence-form]');
+  if (form instanceof HTMLFormElement) {
+    const errorOut = form.querySelector('[data-error]');
+    const outputs = {
+      panels: document.querySelector('[data-panels]'),
+      net: document.querySelector('[data-net]'),
+      posts: document.querySelector('[data-posts]'),
+      rails: document.querySelector('[data-rails]'),
+      pickets: document.querySelector('[data-pickets]'),
+    };
+
+    const parseGateWidths = (raw: FormDataEntryValue | null): number[] => {
+      const text = String(raw ?? '').trim();
+      if (!text) return [];
+      return text.split(',').map((part) => Number(part.trim()));
+    };
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateFence({
+          runLengthFt: Number(data.get('runLength')),
+          panelWidthFt: Number(data.get('panelWidth')),
+          railsPerPanel: Number(data.get('rails')),
+          picketsPerPanel: Number(data.get('pickets')),
+          gateWidthsFt: parseGateWidths(data.get('gates')),
+        });
+
+        if (outputs.panels) outputs.panels.textContent = result.panelsNeeded.toLocaleString('en-US');
+        if (outputs.net) outputs.net.textContent = result.netFenceLengthFt.toFixed(2);
+        if (outputs.posts) outputs.posts.textContent = result.postsNeeded.toLocaleString('en-US');
+        if (outputs.rails) outputs.rails.textContent = result.railsNeeded.toLocaleString('en-US');
+        if (outputs.pickets) outputs.pickets.textContent = result.picketsNeeded.toLocaleString('en-US');
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        for (const name of ['runLength', 'panelWidth', 'rails', 'pickets', 'gates']) url.searchParams.set(name, String(data.get(name) ?? ''));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.'; }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['runLength', 'panelWidth', 'rails', 'pickets', 'gates']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-fence-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .wide { grid-column: 1 / -1; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 780px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } .wide { grid-column: auto; } }
+</style>
