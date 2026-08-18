@@ -1,4 +1,6 @@
 ---
+import { buildBreadcrumbSchema, buildCanonicalUrl, buildToolWebPageSchema } from '@webtools/seo';
+import { siteConfig } from '../../site.config';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { staticPages, type StaticPage } from '../content/static-pages';
 
@@ -8,8 +10,17 @@ export function getStaticPaths() {
 
 interface Props { page: StaticPage }
 const { page } = Astro.props;
+const pathname = `/${page.slug}`;
+const canonical = buildCanonicalUrl(siteConfig.productionOrigin, pathname);
+const structuredData = [
+  buildToolWebPageSchema({ name: page.title, description: page.description, url: canonical }),
+  buildBreadcrumbSchema([
+    { name: 'Home', url: buildCanonicalUrl(siteConfig.productionOrigin, '/') },
+    { name: page.title, url: canonical },
+  ]),
+];
 ---
-<BaseLayout title={page.title} description={page.description} pathname={`/${page.slug}`}>
+<BaseLayout title={page.title} description={page.description} pathname={pathname} structuredData={structuredData}>
   <article class="content-page container">
     {page.eyebrow && <p class="eyebrow">{page.eyebrow}</p>}
     <h1>{page.title}</h1>
