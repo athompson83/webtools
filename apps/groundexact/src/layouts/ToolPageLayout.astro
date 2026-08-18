@@ -1,6 +1,7 @@
 ---
 import { buildBreadcrumbSchema, buildCanonicalUrl, buildToolWebPageSchema } from '@webtools/seo';
 import { siteConfig } from '../../site.config';
+import AdSlot from '../components/AdSlot.astro';
 import ToolActions from '../components/ToolActions.astro';
 import BaseLayout from './BaseLayout.astro';
 import { liveTools, tools } from '../tools/registry';
@@ -67,6 +68,7 @@ const displayedRelatedTools = relatedTools.length > 0 ? relatedTools : automatic
     </section>
 
     <ToolActions />
+    <AdSlot slotKey="tool-after-result" placement="after-result" minWidth={300} minHeight={250} />
 
     <section class="tool-copy">
       <div>
