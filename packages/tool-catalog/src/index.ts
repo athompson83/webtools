@@ -8,6 +8,8 @@ export interface ToolDefinition<Category extends string = string> {
   category: Category;
 }
 
+const forwardLifecycle: ToolStatus[] = ['planned', 'engine-ready', 'page-ready', 'live'];
+
 export function validateToolDefinitions<T extends ToolDefinition>(tools: readonly T[]): T[] {
   const seen = new Set<string>();
   return tools.map((tool) => {
@@ -19,6 +21,16 @@ export function validateToolDefinitions<T extends ToolDefinition>(tools: readonl
     seen.add(tool.slug);
     return tool;
   });
+}
+
+export function assertToolStatusTransition(current: ToolStatus, next: ToolStatus): void {
+  if (current === next) return;
+  const currentIndex = forwardLifecycle.indexOf(current);
+  const nextIndex = forwardLifecycle.indexOf(next);
+  if (nextIndex < currentIndex) return;
+  if (nextIndex !== currentIndex + 1) {
+    throw new Error(`tool status promotion cannot skip lifecycle gates: ${current} -> ${next}`);
+  }
 }
 
 export function toolPath(slug: string): string {
