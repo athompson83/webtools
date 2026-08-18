@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { buildCanonicalUrl } from '@webtools/seo';
 import { siteConfig } from '../../site.config';
 
 interface Props {
@@ -7,10 +8,11 @@ interface Props {
   description: string;
   pathname?: string;
   noindex?: boolean;
+  structuredData?: Record<string, unknown>[];
 }
 
-const { title, description, pathname = '/', noindex = false } = Astro.props;
-const canonical = new URL(pathname, siteConfig.productionOrigin).toString();
+const { title, description, pathname = '/', noindex = false, structuredData = [] } = Astro.props;
+const canonical = buildCanonicalUrl(siteConfig.productionOrigin, pathname);
 const fullTitle = title.includes(siteConfig.name) ? title : `${title} | ${siteConfig.name}`;
 
 const organizationSchema = {
@@ -19,6 +21,17 @@ const organizationSchema = {
   name: siteConfig.name,
   url: siteConfig.productionOrigin,
 };
+
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteConfig.name,
+  url: siteConfig.productionOrigin,
+  description: siteConfig.description,
+  inLanguage: siteConfig.locale,
+};
+
+const schemas = [organizationSchema, websiteSchema, ...structuredData];
 ---
 <!doctype html>
 <html lang="en">
@@ -35,12 +48,12 @@ const organizationSchema = {
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta name="twitter:card" content="summary_large_image" />
-    <script type="application/ld+json" set:html={JSON.stringify(organizationSchema)} />
+    {schemas.map((schema) => <script type="application/ld+json" set:html={JSON.stringify(schema)} />)}
   </head>
   <body>
     <header class="site-header">
       <div class="container site-header-inner">
-        <a class="brand" href="/">GroundExact</a>
+        <a class="brand" href="/">{siteConfig.name}</a>
         <nav class="nav" aria-label="Primary navigation">
           <a href="/#calculators">Calculators</a>
           <a href="/methodology">Methodology</a>
@@ -52,8 +65,8 @@ const organizationSchema = {
     <footer class="site-footer">
       <div class="container footer-grid">
         <div>
-          <strong>GroundExact</strong>
-          <p>Outdoor project calculators built to turn measurements into practical purchase quantities.</p>
+          <strong>{siteConfig.name}</strong>
+          <p>{siteConfig.description}</p>
         </div>
         <div class="footer-links">
           <strong>Information</strong>
