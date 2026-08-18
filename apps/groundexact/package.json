@@ -16,6 +16,7 @@
     "@webtools/calculator-core": "workspace:*",
     "@webtools/seo": "workspace:*",
     "@webtools/site-config": "workspace:*",
+    "@webtools/tool-runtime": "workspace:*",
     "astro": "^5.13.2"
   },
   "devDependencies": {
