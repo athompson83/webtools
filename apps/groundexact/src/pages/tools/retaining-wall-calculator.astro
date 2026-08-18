@@ -1,0 +1,136 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Retaining Wall Block Calculator"
+  description="Estimate retaining wall courses, block count, cap count, and an adjustable extra allowance from wall and product dimensions."
+  pathname="/tools/retaining-wall-calculator"
+  intro="Translate wall dimensions and the actual block size you plan to use into courses, whole blocks, and cap units for purchasing."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact converts the planned wall dimensions to inches, rounds course and block counts upward to whole units, applies your selected extra allowance to wall blocks, and estimates caps separately from cap length."
+  relatedTools={[]}
+>
+  <form slot="calculator" data-wall-form novalidate>
+    <h2>Wall and block dimensions</h2>
+    <div class="field-grid">
+      <label>Wall length (ft)<input name="wallLength" type="number" inputmode="decimal" min="0.01" step="0.1" value="20" required /></label>
+      <label>Wall height (ft)<input name="wallHeight" type="number" inputmode="decimal" min="0.01" step="0.1" value="3" required /></label>
+      <label>Block length (in)<input name="blockLength" type="number" inputmode="decimal" min="0.01" step="0.125" value="16" required /></label>
+      <label>Block height (in)<input name="blockHeight" type="number" inputmode="decimal" min="0.01" step="0.125" value="6" required /></label>
+      <label>Cap length (in)<input name="capLength" type="number" inputmode="decimal" min="0.01" step="0.125" value="12" required /></label>
+      <label>Extra / waste (%)<input name="waste" type="number" inputmode="decimal" min="0" max="100" step="1" value="5" required /></label>
+    </div>
+    <p class="helper">Use the installed face dimensions for the exact wall block and cap product. This calculator estimates quantities only; it does not determine structural suitability, base design, drainage, geogrid, setback, or code compliance.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate wall blocks</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Wall blocks to buy</p>
+    <p class="result-primary"><span data-buy>95</span></p>
+    <p>Whole wall blocks after applying the extra allowance you selected.</p>
+    <ul class="result-list">
+      <li><span>Courses</span><strong><span data-courses>6</span></strong></li>
+      <li><span>Blocks per course</span><strong><span data-per-course>15</span></strong></li>
+      <li><span>Base block count</span><strong><span data-base>90</span></strong></li>
+      <li><span>Caps to buy</span><strong><span data-caps>20</span></strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>courses = ceiling(wall height inches ÷ block height)</code></p>
+    <p><code>blocks per course = ceiling(wall length inches ÷ block length)</code></p>
+    <p><code>base blocks = courses × blocks per course</code></p>
+    <p><code>blocks to buy = ceiling(base blocks × (1 + extra percentage))</code></p>
+    <p><code>caps = ceiling(wall length inches ÷ cap length)</code></p>
+    <p>This arithmetic does not account for buried courses, stepped grades, corners, curves, columns, reinforcement, drainage aggregate, base material, cuts, or manufacturer-specific engineering requirements unless you deliberately include them in the dimensions or extra allowance.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>20 ft long × 3 ft high</h2>
+    <p>With 16-inch-long by 6-inch-high wall blocks, the calculator estimates 6 courses and 15 blocks per course, or 90 blocks before extra allowance. At 5% extra, that becomes 95 whole blocks. With 12-inch caps, the top course requires 20 caps.</p>
+  </section>
+
+  <section slot="faq" class="safety-block">
+    <p class="eyebrow">Important limitation</p>
+    <h2>Quantity is not structural design.</h2>
+    <p>Retaining walls can involve drainage, loading, soil conditions, buried depth, reinforcement, permitting, and manufacturer-specific limits. Use this tool to estimate purchase quantities only and follow the product system, local requirements, and qualified professional guidance where applicable.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculateRetainingWall } from '../../tools/retaining-wall/calculate';
+
+  const form = document.querySelector('[data-wall-form]');
+  if (form instanceof HTMLFormElement) {
+    const errorOut = form.querySelector('[data-error]');
+    const outputs = {
+      buy: document.querySelector('[data-buy]'),
+      courses: document.querySelector('[data-courses]'),
+      perCourse: document.querySelector('[data-per-course]'),
+      base: document.querySelector('[data-base]'),
+      caps: document.querySelector('[data-caps]'),
+    };
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateRetainingWall({
+          wallLengthFt: Number(data.get('wallLength')),
+          wallHeightFt: Number(data.get('wallHeight')),
+          blockLengthInches: Number(data.get('blockLength')),
+          blockHeightInches: Number(data.get('blockHeight')),
+          capLengthInches: Number(data.get('capLength')),
+          wastePercent: Number(data.get('waste')),
+        });
+
+        if (outputs.buy) outputs.buy.textContent = result.blocksToBuy.toLocaleString('en-US');
+        if (outputs.courses) outputs.courses.textContent = result.courses.toLocaleString('en-US');
+        if (outputs.perCourse) outputs.perCourse.textContent = result.blocksPerCourse.toLocaleString('en-US');
+        if (outputs.base) outputs.base.textContent = result.baseBlockCount.toLocaleString('en-US');
+        if (outputs.caps) outputs.caps.textContent = result.capsToBuy.toLocaleString('en-US');
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        for (const name of ['wallLength', 'wallHeight', 'blockLength', 'blockHeight', 'capLength', 'waste']) url.searchParams.set(name, String(data.get(name)));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.'; }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['wallLength', 'wallHeight', 'blockLength', 'blockHeight', 'capLength', 'waste']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-wall-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block, .safety-block { max-width: 780px; padding-block: 4rem; }
+  .example-block h2, .safety-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p, .safety-block p { line-height: 1.7; }
+  .safety-block { border-top: 1px solid var(--border); }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
