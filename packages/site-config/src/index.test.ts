@@ -42,9 +42,23 @@ describe('site configuration', () => {
     expect(() => validateSiteConfig({ ...validConfig(), productionOrigin: 'http://example.com' as `https://${string}` })).toThrow(/canonical HTTPS origin/i);
   });
 
-  it('requires site identity and legal contact information', () => {
-    expect(() => validateSiteConfig({ ...validConfig(), key: '' })).toThrow(/site key and name/i);
+  it('requires safe site identity and legal contact information', () => {
+    expect(() => validateSiteConfig({ ...validConfig(), key: '' })).toThrow(/site key/i);
+    expect(() => validateSiteConfig({ ...validConfig(), key: '../escape' })).toThrow(/site key/i);
+    expect(() => validateSiteConfig({ ...validConfig(), name: '   ' })).toThrow(/site name/i);
+    expect(() => validateSiteConfig({ ...validConfig(), description: '' })).toThrow(/description/i);
+    expect(() => validateSiteConfig({ ...validConfig(), locale: '' })).toThrow(/locale/i);
     expect(() => validateSiteConfig({ ...validConfig(), legal: { ...validConfig().legal, contactEmail: 'invalid' } })).toThrow(/contact email/i);
+    expect(() => validateSiteConfig({ ...validConfig(), legal: { ...validConfig().legal, privacyEmail: 'invalid' } })).toThrow(/privacy email/i);
+  });
+
+  it('rejects advertising enabled without a provider', () => {
+    expect(() => validateSiteConfig({ ...validConfig(), ads: { enabled: true, provider: 'none' } })).toThrow(/advertising provider/i);
+  });
+
+  it('requires a Google Analytics measurement ID when that provider is active', () => {
+    expect(() => validateSiteConfig({ ...validConfig(), analytics: { provider: 'google-analytics' } })).toThrow(/measurement id/i);
+    expect(validateSiteConfig({ ...validConfig(), analytics: { provider: 'google-analytics', measurementId: 'G-TEST123' } }).analytics.measurementId).toBe('G-TEST123');
   });
 
   it('builds absolute site URLs from relative paths', () => {
