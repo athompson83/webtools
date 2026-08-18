@@ -15,6 +15,7 @@ export interface RobotsPolicyInput {
   allowSearchIndexing: boolean;
   allowOaiSearchBot: boolean;
   allowGptBot: boolean;
+  sitemapPath?: string;
 }
 
 export function buildCanonicalUrl(origin: string, pathname: string): string {
@@ -62,6 +63,8 @@ export function buildFaqSchema(items: Array<{ question: string; answer: string }
 
 export function buildRobotsTxt(input: RobotsPolicyInput): string {
   const origin = new URL(input.origin);
+  const sitemapPath = input.sitemapPath ?? '/sitemap.xml';
+  const sitemapUrl = new URL(sitemapPath, origin.origin).toString();
   const generalDirective = input.allowSearchIndexing ? 'Allow: /' : 'Disallow: /';
   const oaiDirective = input.allowOaiSearchBot ? 'Allow: /' : 'Disallow: /';
   const gptDirective = input.allowGptBot ? 'Allow: /' : 'Disallow: /';
@@ -76,7 +79,34 @@ export function buildRobotsTxt(input: RobotsPolicyInput): string {
     'User-agent: GPTBot',
     gptDirective,
     '',
-    `Sitemap: ${origin.origin}/sitemap-index.xml`,
+    `Sitemap: ${sitemapUrl}`,
+    '',
+  ].join('\n');
+}
+
+function escapeXml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;');
+}
+
+export function buildSitemapXml(urls: readonly string[]): string {
+  const uniqueUrls = [...new Set(urls)];
+  for (const url of uniqueUrls) {
+    const parsed = new URL(url);
+    if (parsed.protocol !== 'https:') throw new RangeError('sitemap URLs must use HTTPS.');
+    if (parsed.search || parsed.hash) throw new RangeError('sitemap URLs must be canonical and omit query strings and fragments.');
+  }
+
+  const entries = uniqueUrls.map((url) => `  <url><loc>${escapeXml(url)}</loc></url>`).join('\n');
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    entries,
+    '</urlset>',
     '',
   ].join('\n');
 }
