@@ -1,0 +1,115 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Paver Calculator"
+  description="Estimate paver quantity from project area, paver dimensions, and an adjustable extra allowance for cuts and breakage."
+  pathname="/tools/paver-calculator"
+  intro="Convert project area and the actual face dimensions of your paver into a whole-piece purchase estimate with an adjustable extra allowance."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact converts the paver face dimensions from square inches to square feet, applies your selected extra allowance to the project area, and rounds the required piece count upward."
+  relatedTools={[]}
+>
+  <form slot="calculator" data-paver-form novalidate>
+    <h2>Project and paver dimensions</h2>
+    <div class="field-grid">
+      <label>Project area (sq ft)<input name="area" type="number" inputmode="decimal" min="0.01" step="0.1" value="240" required /></label>
+      <label>Paver length (in)<input name="paverLength" type="number" inputmode="decimal" min="0.01" step="0.125" value="8" required /></label>
+      <label>Paver width (in)<input name="paverWidth" type="number" inputmode="decimal" min="0.01" step="0.125" value="4" required /></label>
+      <label>Extra / waste (%)<input name="waste" type="number" inputmode="decimal" min="0" max="100" step="1" value="10" required /></label>
+    </div>
+    <p class="helper">Use the exposed face dimensions for the paver you plan to install. Patterns, borders, curves, cuts, spacers, and manufacturer packaging can affect the actual order.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate pavers</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Whole pavers to buy</p>
+    <p class="result-primary"><span data-pavers>1,188</span></p>
+    <p>Piece count after applying your selected extra allowance.</p>
+    <ul class="result-list">
+      <li><span>Adjusted project area</span><strong><span data-adjusted>264.00</span> sq ft</strong></li>
+      <li><span>Area per paver</span><strong><span data-unit-area>0.2222</span> sq ft</strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>paver area (sq ft) = length inches × width inches ÷ 144</code></p>
+    <p><code>adjusted project area = project area × (1 + extra percentage)</code></p>
+    <p><code>pavers = ceiling(adjusted area ÷ paver area)</code></p>
+    <p>The calculator estimates surface units only. It does not calculate base material, bedding sand, edge restraint, drainage, joint material, pattern-specific cutting, or structural suitability.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>240 sq ft with 8 × 4 in pavers</h2>
+    <p>An 8-by-4-inch paver covers about 0.2222 square feet. A 240-square-foot project with 10% extra becomes 264 square feet, which requires 1,188 whole pavers.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculatePavers } from '../../tools/paver/calculate';
+
+  const form = document.querySelector('[data-paver-form]');
+  if (form instanceof HTMLFormElement) {
+    const errorOut = form.querySelector('[data-error]');
+    const paversOut = document.querySelector('[data-pavers]');
+    const adjustedOut = document.querySelector('[data-adjusted]');
+    const unitAreaOut = document.querySelector('[data-unit-area]');
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculatePavers({
+          areaSqFt: Number(data.get('area')),
+          paverLengthInches: Number(data.get('paverLength')),
+          paverWidthInches: Number(data.get('paverWidth')),
+          wastePercent: Number(data.get('waste')),
+        });
+
+        if (paversOut) paversOut.textContent = result.paversNeeded.toLocaleString('en-US');
+        if (adjustedOut) adjustedOut.textContent = result.adjustedAreaSqFt.toFixed(2);
+        if (unitAreaOut) unitAreaOut.textContent = result.singlePaverAreaSqFt.toFixed(4);
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        for (const name of ['area', 'paverLength', 'paverWidth', 'waste']) url.searchParams.set(name, String(data.get(name)));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.'; }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['area', 'paverLength', 'paverWidth', 'waste']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-paver-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 760px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
