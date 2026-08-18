@@ -18,4 +18,26 @@ describe('calculateGravel', () => {
     expect(result.recommendedOrderCuYd).toBe(2);
     expect(result.estimatedTons).toBeCloseTo(2.625, 5);
   });
+
+  it('rejects non-positive material density', () => {
+    expect(() => calculateGravel({
+      lengthFt: 20,
+      widthFt: 10,
+      depthInches: 3,
+      wastePercent: 5,
+      densityLbPerCuFt: 0,
+      bulkIncrementCuYd: 0.25,
+    })).toThrow(RangeError);
+  });
+
+  it('rejects negative project dimensions', () => {
+    expect(() => calculateGravel({
+      lengthFt: -1,
+      widthFt: 10,
+      depthInches: 3,
+      wastePercent: 5,
+      densityLbPerCuFt: 100,
+      bulkIncrementCuYd: 0.25,
+    })).toThrow(RangeError);
+  });
 });
