@@ -6,6 +6,11 @@ describe('SEO helpers', () => {
     expect(buildCanonicalUrl('https://groundexact.com', '/tools/mulch-calculator?l=20')).toBe('https://groundexact.com/tools/mulch-calculator');
   });
 
+  it('rejects canonical path values that escape the configured origin', () => {
+    expect(() => buildCanonicalUrl('https://groundexact.com', 'https://other.com/page')).toThrow(/configured origin/i);
+    expect(() => buildCanonicalUrl('https://groundexact.com', '//other.com/page')).toThrow(/configured origin/i);
+  });
+
   it('builds breadcrumb structured data', () => {
     const schema = buildBreadcrumbSchema([
       { name: 'Home', url: 'https://groundexact.com/' },
