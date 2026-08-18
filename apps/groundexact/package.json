@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@webtools/calculator-core": "workspace:*",
+    "@webtools/compliance": "workspace:*",
+    "@webtools/monetization": "workspace:*",
     "@webtools/seo": "workspace:*",
     "@webtools/site-config": "workspace:*",
     "@webtools/tool-runtime": "workspace:*",
