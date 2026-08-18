@@ -1,0 +1,114 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Cubic Yard Calculator"
+  description="Convert project length, width, and depth into cubic feet and cubic yards for mulch, soil, gravel, and other bulk materials."
+  pathname="/tools/cubic-yard-calculator"
+  intro="Convert a rectangular project area and depth into cubic feet and cubic yards without hiding the conversion math."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact multiplies length by width to calculate square footage, converts depth from inches to feet, multiplies to get cubic feet, and divides by 27 because one cubic yard contains 27 cubic feet."
+  relatedTools={[{ href: '/tools/mulch-calculator', name: 'Mulch Calculator' }]}
+>
+  <form slot="calculator" data-cubic-yard-form novalidate>
+    <h2>Project measurements</h2>
+    <div class="field-grid">
+      <label>Length (ft)<input name="length" type="number" inputmode="decimal" min="0" step="0.1" value="18" required /></label>
+      <label>Width (ft)<input name="width" type="number" inputmode="decimal" min="0" step="0.1" value="12" required /></label>
+      <label>Depth (in)<input name="depth" type="number" inputmode="decimal" min="0" step="0.25" value="4" required /></label>
+    </div>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate volume</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Calculated volume</p>
+    <p class="result-primary"><span data-cuyd>2.67</span> yd³</p>
+    <p>This is the mathematical volume before any material-specific waste, compaction, or supplier rounding.</p>
+    <ul class="result-list">
+      <li><span>Project area</span><strong><span data-area>216</span> sq ft</strong></li>
+      <li><span>Cubic feet</span><strong><span data-cuft>72</span> ft³</strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>cubic feet = length (ft) × width (ft) × (depth inches ÷ 12)</code></p>
+    <p><code>cubic yards = cubic feet ÷ 27</code></p>
+    <p>This general-purpose calculator intentionally stops at volume. Material-specific calculators can then add supplier packaging, density, waste, or order-increment logic without treating those values as universal.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>18 ft × 12 ft × 4 in</h2>
+    <p>An 18-by-12-foot rectangle has 216 square feet of area. Four inches is one-third of a foot, producing 72 cubic feet. Dividing by 27 produces approximately 2.67 cubic yards.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculateCubicYards } from '../../tools/cubic-yard/calculate';
+
+  const form = document.querySelector('[data-cubic-yard-form]');
+  if (form instanceof HTMLFormElement) {
+    const areaOut = document.querySelector('[data-area]');
+    const cubicFeetOut = document.querySelector('[data-cuft]');
+    const cubicYardsOut = document.querySelector('[data-cuyd]');
+    const errorOut = form.querySelector('[data-error]');
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateCubicYards({
+          lengthFt: Number(data.get('length')),
+          widthFt: Number(data.get('width')),
+          depthInches: Number(data.get('depth')),
+        });
+        if (areaOut) areaOut.textContent = result.areaSqFt.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (cubicFeetOut) cubicFeetOut.textContent = result.cubicFeet.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (cubicYardsOut) cubicYardsOut.textContent = result.cubicYards.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('length', String(data.get('length')));
+        url.searchParams.set('width', String(data.get('width')));
+        url.searchParams.set('depth', String(data.get('depth')));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) {
+          errorOut.hidden = false;
+          errorOut.textContent = error instanceof Error ? error.message : 'Check your measurements and try again.';
+        }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['length', 'width', 'depth']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-cubic-yard-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 760px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
