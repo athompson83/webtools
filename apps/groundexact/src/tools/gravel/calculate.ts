@@ -18,6 +18,9 @@ export interface GravelResult {
 }
 
 export function calculateGravel(input: GravelInput): GravelResult {
+  if (!Number.isFinite(input.densityLbPerCuFt) || input.densityLbPerCuFt <= 0) {
+    throw new RangeError('material density must be greater than zero.');
+  }
   const areaSqFt = rectangularAreaSqFt(input.lengthFt, input.widthFt);
   const baseCuYd = volumeFromAreaAndDepthCuYd(areaSqFt, input.depthInches);
   const { adjusted: adjustedCuYd } = applyWaste(baseCuYd, input.wastePercent);
