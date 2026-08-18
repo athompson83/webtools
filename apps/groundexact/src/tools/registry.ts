@@ -10,8 +10,8 @@ export interface ToolSummary {
 
 export const tools: ToolSummary[] = [
   { slug: 'mulch-calculator', name: 'Mulch Calculator', description: 'Estimate cubic yards, waste-adjusted order quantity, and bag equivalents.', status: 'page-ready', category: 'materials' },
-  { slug: 'gravel-calculator', name: 'Gravel & Stone Calculator', description: 'Estimate volume, weight, waste, and order quantity for aggregate projects.', status: 'engine-ready', category: 'materials' },
-  { slug: 'topsoil-calculator', name: 'Topsoil Calculator', description: 'Estimate topsoil volume for beds, lawn leveling, and fill projects.', status: 'engine-ready', category: 'materials' },
+  { slug: 'gravel-calculator', name: 'Gravel & Stone Calculator', description: 'Estimate volume, weight, waste, and order quantity for aggregate projects.', status: 'page-ready', category: 'materials' },
+  { slug: 'topsoil-calculator', name: 'Topsoil Calculator', description: 'Estimate topsoil volume for beds, lawn leveling, and fill projects.', status: 'page-ready', category: 'materials' },
   { slug: 'sod-calculator', name: 'Sod Calculator', description: 'Calculate square footage, waste, rolls or pallets, and purchase quantity.', status: 'engine-ready', category: 'coverage' },
   { slug: 'paver-calculator', name: 'Paver Calculator', description: 'Estimate paver count, waste allowance, and project area.', status: 'engine-ready', category: 'structure' },
   { slug: 'retaining-wall-calculator', name: 'Retaining Wall Calculator', description: 'Estimate block count, cap blocks, and course requirements.', status: 'engine-ready', category: 'structure' },
