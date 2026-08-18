@@ -10,6 +10,7 @@ export const GET: APIRoute = () => {
     allowSearchIndexing: siteConfig.allowSearchIndexing,
     allowOaiSearchBot: siteConfig.allowOaiSearchBot,
     allowGptBot: siteConfig.allowGptBot,
+    sitemapPath: '/sitemap.xml',
   });
 
   return new Response(body, {
