@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { staticPages, type StaticPage } from '../content/static-pages';
+
+export function getStaticPaths() {
+  return staticPages.map((page) => ({ params: { slug: page.slug }, props: { page } }));
+}
+
+interface Props { page: StaticPage }
+const { page } = Astro.props;
+---
+<BaseLayout title={page.title} description={page.description} pathname={`/${page.slug}`}>
+  <article class="content-page container">
+    {page.eyebrow && <p class="eyebrow">{page.eyebrow}</p>}
+    <h1>{page.title}</h1>
+    <p class="lede">{page.description}</p>
+
+    <div class="content-sections">
+      {page.sections.map((section) => (
+        <section>
+          <h2>{section.heading}</h2>
+          {section.paragraphs?.map((paragraph) => <p>{paragraph}</p>)}
+          {section.bullets && (
+            <ul>
+              {section.bullets.map((bullet) => <li>{bullet}</li>)}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .content-page { max-width: 820px; padding-block: clamp(3rem, 7vw, 6rem); }
+  .content-page h1 { max-width: 16ch; margin: .25rem 0 1rem; font-size: clamp(2.6rem, 7vw, 5rem); line-height: .98; letter-spacing: -.045em; }
+  .lede { max-width: 65ch; color: var(--muted-text); font-size: 1.18rem; line-height: 1.7; }
+  .content-sections { margin-top: 3rem; display: grid; gap: 2.25rem; }
+  .content-sections section { padding-top: 1.75rem; border-top: 1px solid var(--border); }
+  .content-sections h2 { margin: 0 0 .75rem; font-size: 1.4rem; }
+  .content-sections p, .content-sections li { line-height: 1.75; }
+  .content-sections ul { padding-left: 1.25rem; }
+</style>
