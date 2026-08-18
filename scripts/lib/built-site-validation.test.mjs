@@ -20,6 +20,7 @@ function makeFixture() {
   fs.writeFileSync(path.join(dist, 'about', 'index.html'), '<link rel="canonical" href="https://groundexact.com/about"><meta name="robots" content="index,follow"><a href="/">Home</a>');
   fs.writeFileSync(path.join(dist, 'robots.txt'), 'Sitemap: https://groundexact.com/sitemap.xml\n');
   fs.writeFileSync(path.join(dist, 'sitemap.xml'), '<urlset><url><loc>https://groundexact.com/</loc></url></urlset>');
+  fs.writeFileSync(path.join(dist, 'ads.txt'), '');
   return root;
 }
 
@@ -81,6 +82,16 @@ test('rejects built HTML without exactly one canonical URL', () => {
   try {
     fs.writeFileSync(path.join(root, 'apps', 'groundexact', 'dist', 'about', 'index.html'), '<meta name="robots" content="index,follow"><a href="/">Home</a>');
     assert.throws(() => validateBuiltSite(root, 'groundexact'), /exactly one canonical/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects build output without ads.txt', () => {
+  const root = makeFixture();
+  try {
+    fs.rmSync(path.join(root, 'apps', 'groundexact', 'dist', 'ads.txt'));
+    assert.throws(() => validateBuiltSite(root, 'groundexact'), /missing ads\.txt/i);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
