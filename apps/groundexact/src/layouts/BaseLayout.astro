@@ -1,0 +1,75 @@
+---
+import '../styles/global.css';
+import { siteConfig } from '../../site.config';
+
+interface Props {
+  title: string;
+  description: string;
+  pathname?: string;
+  noindex?: boolean;
+}
+
+const { title, description, pathname = '/', noindex = false } = Astro.props;
+const canonical = new URL(pathname, siteConfig.productionOrigin).toString();
+const fullTitle = title.includes(siteConfig.name) ? title : `${title} | ${siteConfig.name}`;
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: siteConfig.name,
+  url: siteConfig.productionOrigin,
+};
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={siteConfig.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" set:html={JSON.stringify(organizationSchema)} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container site-header-inner">
+        <a class="brand" href="/">GroundExact</a>
+        <nav class="nav" aria-label="Primary navigation">
+          <a href="/#calculators">Calculators</a>
+          <a href="/methodology">Methodology</a>
+          <a href="/about">About</a>
+        </nav>
+      </div>
+    </header>
+    <main><slot /></main>
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <strong>GroundExact</strong>
+          <p>Outdoor project calculators built to turn measurements into practical purchase quantities.</p>
+        </div>
+        <div class="footer-links">
+          <strong>Information</strong>
+          <a href="/about">About</a>
+          <a href="/methodology">Methodology</a>
+          <a href="/accessibility">Accessibility</a>
+          <a href="/contact">Contact</a>
+        </div>
+        <div class="footer-links">
+          <strong>Legal</strong>
+          <a href="/privacy">Privacy</a>
+          <a href="/terms">Terms</a>
+          <a href="/advertising-disclosure">Advertising & affiliate disclosure</a>
+          <a href="/cookies">Cookie policy</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
