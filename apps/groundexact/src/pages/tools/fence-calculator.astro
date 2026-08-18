@@ -56,8 +56,10 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
 </ToolPageLayout>
 
 <script>
+  import { formState, hydrateNamedFields, parseNumberList, readNumber, replaceToolState } from '@webtools/tool-runtime';
   import { calculateFence } from '../../tools/fence/calculate';
 
+  const fields = ['runLength', 'panelWidth', 'rails', 'pickets', 'gates'] as const;
   const form = document.querySelector('[data-fence-form]');
   if (form instanceof HTMLFormElement) {
     const errorOut = form.querySelector('[data-error]');
@@ -69,21 +71,15 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
       pickets: document.querySelector('[data-pickets]'),
     };
 
-    const parseGateWidths = (raw: FormDataEntryValue | null): number[] => {
-      const text = String(raw ?? '').trim();
-      if (!text) return [];
-      return text.split(',').map((part) => Number(part.trim()));
-    };
-
     const render = () => {
       try {
         const data = new FormData(form);
         const result = calculateFence({
-          runLengthFt: Number(data.get('runLength')),
-          panelWidthFt: Number(data.get('panelWidth')),
-          railsPerPanel: Number(data.get('rails')),
-          picketsPerPanel: Number(data.get('pickets')),
-          gateWidthsFt: parseGateWidths(data.get('gates')),
+          runLengthFt: readNumber(data.get('runLength'), 'run length', { min: 0.01 }),
+          panelWidthFt: readNumber(data.get('panelWidth'), 'panel width', { min: 0.01 }),
+          railsPerPanel: readNumber(data.get('rails'), 'rails per panel', { min: 0, integer: true }),
+          picketsPerPanel: readNumber(data.get('pickets'), 'pickets per panel', { min: 0, integer: true }),
+          gateWidthsFt: parseNumberList(data.get('gates')),
         });
 
         if (outputs.panels) outputs.panels.textContent = result.panelsNeeded.toLocaleString('en-US');
@@ -92,24 +88,20 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
         if (outputs.rails) outputs.rails.textContent = result.railsNeeded.toLocaleString('en-US');
         if (outputs.pickets) outputs.pickets.textContent = result.picketsNeeded.toLocaleString('en-US');
         if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
-
-        const url = new URL(window.location.href);
-        for (const name of ['runLength', 'panelWidth', 'rails', 'pickets', 'gates']) url.searchParams.set(name, String(data.get(name) ?? ''));
-        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+        replaceToolState(window.location.pathname, formState(form, fields));
       } catch (error) {
         if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.'; }
       }
     };
 
     form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
-    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => {
+      form.reset();
+      history.replaceState(null, '', window.location.pathname);
+      render();
+    });
 
-    const params = new URLSearchParams(window.location.search);
-    for (const name of ['runLength', 'panelWidth', 'rails', 'pickets', 'gates']) {
-      const input = form.elements.namedItem(name);
-      const value = params.get(name);
-      if (input instanceof HTMLInputElement && value !== null) input.value = value;
-    }
+    hydrateNamedFields(form, new URLSearchParams(window.location.search), fields);
     render();
   }
 </script>
