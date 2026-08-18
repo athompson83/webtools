@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile=false
-      - name: Validate portfolio isolation
+      - name: Validate portfolio
         run: pnpm validate:portfolio
       - name: Lint
         run: pnpm lint
@@ -32,3 +32,5 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: Validate dist
+        run: pnpm validate:dist
