@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { relatedLiveTools, toolPath, validateToolDefinitions } from './index';
+import { assertToolStatusTransition, relatedLiveTools, toolPath, validateToolDefinitions } from './index';
 
 describe('tool catalog', () => {
   const tools = validateToolDefinitions([
@@ -27,5 +27,18 @@ describe('tool catalog', () => {
     expect(() => validateToolDefinitions([
       { slug: '../escape', name: 'Bad', description: 'Bad', status: 'planned', category: 'a' },
     ])).toThrow(/tool slug/i);
+  });
+
+  it('allows one-step forward promotions and emergency demotions', () => {
+    expect(() => assertToolStatusTransition('planned', 'engine-ready')).not.toThrow();
+    expect(() => assertToolStatusTransition('engine-ready', 'page-ready')).not.toThrow();
+    expect(() => assertToolStatusTransition('page-ready', 'live')).not.toThrow();
+    expect(() => assertToolStatusTransition('live', 'page-ready')).not.toThrow();
+    expect(() => assertToolStatusTransition('live', 'planned')).not.toThrow();
+  });
+
+  it('rejects skipped forward promotions', () => {
+    expect(() => assertToolStatusTransition('planned', 'page-ready')).toThrow(/cannot skip/i);
+    expect(() => assertToolStatusTransition('engine-ready', 'live')).toThrow(/cannot skip/i);
   });
 });
