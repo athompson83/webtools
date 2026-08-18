@@ -1,12 +1,46 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+const allowedStatuses = new Set(['scaffold', 'mvp', 'beta', 'production', 'retired']);
+const requiredSiteFiles = [
+  'astro.config.mjs',
+  'site.config.ts',
+  'src/pages/robots.txt.ts',
+  'src/pages/sitemap.xml.ts',
+  'src/pages/ads.txt.ts',
+  'src/pages/404.astro',
+  'src/content/static-pages.ts',
+  'src/config/runtime-data.ts',
+  'src/config/advertising.ts',
+  'src/tools/registry.ts',
+  'src/layouts/BaseLayout.astro',
+  'src/layouts/ToolPageLayout.astro',
+  'src/components/ToolActions.astro',
+  'src/components/AdSlot.astro',
+];
+
 function assertUnique(values, label) {
   const seen = new Set();
   for (const value of values) {
     if (seen.has(value)) throw new Error(`Duplicate ${label}: ${value}`);
     seen.add(value);
   }
+}
+
+function canonicalOrigin(value, label) {
+  const origin = new URL(value);
+  if (
+    origin.protocol !== 'https:' ||
+    origin.pathname !== '/' ||
+    origin.search ||
+    origin.hash ||
+    origin.username ||
+    origin.password ||
+    origin.port
+  ) {
+    throw new Error(`${label} must be a canonical HTTPS origin.`);
+  }
+  return origin.origin;
 }
 
 export function validateManifestShape(manifest) {
@@ -18,11 +52,11 @@ export function validateManifestShape(manifest) {
     for (const field of ['key', 'name', 'appDir', 'packageName', 'productionOrigin', 'status']) {
       if (typeof site[field] !== 'string' || !site[field].trim()) throw new Error(`${prefix}.${field} is required.`);
     }
-    const origin = new URL(site.productionOrigin);
-    if (origin.protocol !== 'https:' || origin.pathname !== '/' || origin.search || origin.hash) {
-      throw new Error(`${prefix}.productionOrigin must be a canonical HTTPS origin.`);
-    }
-    if (!site.appDir.startsWith('apps/')) throw new Error(`${prefix}.appDir must live under apps/.`);
+    if (!/^[a-z][a-z0-9-]*$/.test(site.key)) throw new Error(`${prefix}.key must use lowercase letters, numbers, and hyphens only.`);
+    canonicalOrigin(site.productionOrigin, `${prefix}.productionOrigin`);
+    if (site.appDir !== `apps/${site.key}`) throw new Error(`${prefix}.appDir must equal apps/${site.key}.`);
+    if (site.packageName !== `@webtools/${site.key}`) throw new Error(`${prefix}.packageName must equal @webtools/${site.key}.`);
+    if (!allowedStatuses.has(site.status)) throw new Error(`${prefix} site status is unsupported: ${site.status}.`);
   }
 
   assertUnique(manifest.sites.map((site) => site.key), 'site key');
@@ -51,6 +85,12 @@ export function validateRepositoryPortfolio(rootDir) {
     if (!fs.existsSync(packagePath)) throw new Error(`Missing package.json for ${site.key}.`);
     if (!fs.existsSync(configPath)) throw new Error(`Missing site.config.ts for ${site.key}.`);
 
+    for (const relativePath of requiredSiteFiles) {
+      if (!fs.existsSync(path.join(appDir, relativePath))) {
+        throw new Error(`${site.key} missing required site file: ${relativePath}`);
+      }
+    }
+
     const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     if (pkg.name !== site.packageName) throw new Error(`${site.key} package name mismatch: manifest=${site.packageName}, package.json=${pkg.name}`);
 
@@ -60,9 +100,16 @@ export function validateRepositoryPortfolio(rootDir) {
     if (configKey !== site.key) throw new Error(`${site.key} site config key mismatch: ${configKey ?? 'missing'}`);
     if (configOrigin !== site.productionOrigin) throw new Error(`${site.key} production origin mismatch: ${configOrigin ?? 'missing'}`);
 
+    const astroSource = fs.readFileSync(path.join(appDir, 'astro.config.mjs'), 'utf8');
+    const astroOrigin = extractSingleQuotedProperty(astroSource, 'site');
+    if (astroOrigin !== site.productionOrigin) {
+      throw new Error(`${site.key} Astro site origin mismatch: manifest=${site.productionOrigin}, astro.config.mjs=${astroOrigin ?? 'missing'}`);
+    }
+
     for (const otherOrigin of knownOrigins) {
       if (otherOrigin === site.productionOrigin) continue;
       if (configSource.includes(otherOrigin)) throw new Error(`${site.key} site.config.ts contains another site's production origin: ${otherOrigin}`);
+      if (astroSource.includes(otherOrigin)) throw new Error(`${site.key} astro.config.mjs contains another site's production origin: ${otherOrigin}`);
     }
   }
 
