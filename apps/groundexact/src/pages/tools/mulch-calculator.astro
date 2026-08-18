@@ -1,141 +1,125 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
 ---
-<BaseLayout
+<ToolPageLayout
   title="Mulch Calculator"
-  description="Calculate how many cubic yards or bags of mulch you need from project area, depth, and an adjustable waste allowance."
+  description="Calculate mulch cubic yards, an adjustable extra allowance, practical bulk order quantity, and bag equivalents."
   pathname="/tools/mulch-calculator"
+  intro="Turn measured bed area and mulch depth into cubic yards, a practical rounded bulk order, and bag equivalents without hiding the underlying quantity."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact converts the selected depth from inches to feet, calculates cubic yards from area and depth, applies your selected extra allowance, then rounds the bulk order upward to a quarter-yard increment and calculates whole-bag equivalents."
+  relatedTools={[]}
 >
-  <section class="hero" style="padding-bottom:24px;">
-    <div class="container">
-      <div class="eyebrow">Outdoor material calculator</div>
-      <h1 class="display" style="font-size:clamp(2.7rem,6vw,4.9rem);">Mulch calculator</h1>
-      <p class="lead">Turn bed area and mulch depth into cubic yards, a practical rounded bulk order, and bag equivalents.</p>
+  <form slot="calculator" data-mulch-form novalidate>
+    <h2>Bed and product details</h2>
+    <div class="field-grid">
+      <label>Project area (sq ft)<input name="area" type="number" inputmode="decimal" min="0" step="0.1" value="327" required /></label>
+      <label>Mulch depth (in)<input name="depth" type="number" inputmode="decimal" min="0" step="0.25" value="3" required /></label>
+      <label>Extra / waste (%)<input name="waste" type="number" inputmode="decimal" min="0" max="100" step="1" value="5" required /></label>
+      <label>Bag size (cu ft)
+        <select name="bag">
+          <option value="1.5">1.5 cu ft</option>
+          <option value="2" selected>2 cu ft</option>
+          <option value="3">3 cu ft</option>
+        </select>
+      </label>
     </div>
-  </section>
-
-  <section class="container">
-    <div class="calc-shell" data-mulch-calculator>
-      <form class="calc-panel" novalidate>
-        <div class="field-grid">
-          <div class="field">
-            <label for="area">Project area (sq ft)</label>
-            <input id="area" name="area" type="number" inputmode="decimal" min="0" step="0.1" value="327" required />
-          </div>
-          <div class="field">
-            <label for="depth">Mulch depth (inches)</label>
-            <input id="depth" name="depth" type="number" inputmode="decimal" min="0" step="0.25" value="3" required />
-          </div>
-          <div class="field">
-            <label for="waste">Extra / waste allowance (%)</label>
-            <input id="waste" name="waste" type="number" inputmode="decimal" min="0" max="100" step="1" value="5" required />
-          </div>
-          <div class="field">
-            <label for="bagSize">Bag size (cu ft)</label>
-            <select id="bagSize" name="bagSize">
-              <option value="1.5">1.5 cu ft</option>
-              <option value="2" selected>2 cu ft</option>
-              <option value="3">3 cu ft</option>
-            </select>
-          </div>
-        </div>
-        <div class="calc-actions">
-          <button class="btn" type="submit">Calculate mulch</button>
-          <button class="btn secondary" type="button" data-reset>Reset</button>
-        </div>
-        <div class="notice">Use measured bed area when possible. Irregular beds can be divided into rectangles/circles and added together. Mulch compaction and supplier rounding vary.</div>
-      </form>
-
-      <aside class="result-panel" aria-live="polite" aria-atomic="true">
-        <div class="result-kicker">Recommended bulk order</div>
-        <div class="result-primary"><span data-order>3.25</span> yd³</div>
-        <p>Rounded upward to the nearest quarter cubic yard so the recommendation is practical for ordering.</p>
-        <ul class="result-list">
-          <li><span>Calculated need</span><strong><span data-base>3.03</span> yd³</strong></li>
-          <li><span>With extra allowance</span><strong><span data-adjusted>3.18</span> yd³</strong></li>
-          <li><span>Bag equivalent</span><strong><span data-bags>43</span> bags</strong></li>
-        </ul>
-      </aside>
+    <p class="helper">Use measured bed area when possible. Irregular beds can be divided into simpler shapes and added together. Compaction, settling, delivered volume, and supplier order increments can affect real-world needs.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate mulch</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
     </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Recommended bulk order</p>
+    <p class="result-primary"><span data-order>3.25</span> yd³</p>
+    <p>Rounded upward to the nearest quarter cubic yard after the selected extra allowance.</p>
+    <ul class="result-list">
+      <li><span>Calculated need</span><strong><span data-base>3.03</span> yd³</strong></li>
+      <li><span>With extra allowance</span><strong><span data-adjusted>3.18</span> yd³</strong></li>
+      <li><span>Bag equivalent</span><strong><span data-bags>43</span> bags</strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>cubic yards = area (sq ft) × (depth inches ÷ 12) ÷ 27</code></p>
+    <p><code>adjusted cubic yards = cubic yards × (1 + extra percentage)</code></p>
+    <p>The bulk recommendation rounds upward to the nearest 0.25 cubic yard in the current MVP. Bag equivalents use the bag volume you select and round upward to a whole bag.</p>
+    <p>The appropriate mulch depth depends on the project, material, existing bed, and local horticultural guidance. GroundExact does not force one universal recommended depth.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>327 sq ft × 3 in</h2>
+    <p>A 327-square-foot bed at 3 inches deep requires about 3.03 cubic yards before extra allowance. With 5% extra, the quantity becomes about 3.18 cubic yards, so the quarter-yard order recommendation is 3.25 cubic yards. At 2 cubic feet per bag, the adjusted volume is 43 whole bags.</p>
   </section>
+</ToolPageLayout>
 
-  <section class="section">
-    <div class="container prose">
-      <h2>How to use the mulch calculator</h2>
-      <ol>
-        <li>Measure the total surface area you plan to cover in square feet.</li>
-        <li>Choose the mulch depth in inches.</li>
-        <li>Add an optional extra allowance for uneven ground, settling, or measurement uncertainty.</li>
-        <li>Compare the bulk-yard recommendation with the bag equivalent.</li>
-      </ol>
+<script>
+  import { formState, hydrateNamedFields, replaceToolState } from '@webtools/tool-runtime';
+  import { calculateMulch } from '../../tools/mulch/calculate';
 
-      <h2>Formula and methodology</h2>
-      <p>GroundExact converts depth from inches to feet, multiplies that depth by square footage to get cubic feet, then divides by 27 because one cubic yard contains 27 cubic feet.</p>
-      <p><code>cubic yards = area (sq ft) × (depth inches ÷ 12) ÷ 27</code></p>
-      <p>The optional extra allowance is applied after the base volume is calculated. The displayed bulk order is then rounded upward to the nearest 0.25 cubic yard.</p>
+  const fields = ['area', 'depth', 'waste', 'bag'] as const;
+  const form = document.querySelector('[data-mulch-form]');
+  if (form instanceof HTMLFormElement) {
+    const errorOut = form.querySelector('[data-error]');
+    const outputs = {
+      order: document.querySelector('[data-order]'),
+      base: document.querySelector('[data-base]'),
+      adjusted: document.querySelector('[data-adjusted]'),
+      bags: document.querySelector('[data-bags]'),
+    };
 
-      <h2>Worked example</h2>
-      <p>A 327-square-foot bed covered 3 inches deep requires about 3.03 cubic yards before any extra allowance. With 5% extra, the calculated quantity is about 3.18 cubic yards, so GroundExact recommends a 3.25-cubic-yard bulk order. At 2 cubic feet per bag, the same adjusted amount is approximately 43 bags.</p>
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateMulch({
+          areaSqFt: Number(data.get('area')),
+          depthInches: Number(data.get('depth')),
+          wastePercent: Number(data.get('waste')),
+          bagSizeCuFt: Number(data.get('bag')),
+          orderIncrementCuYd: 0.25,
+        });
 
-      <h2>What depth should I use?</h2>
-      <p>The correct depth depends on the material, existing bed condition, purpose, and local horticultural guidance. GroundExact intentionally does not force one universal recommended depth. Use the depth appropriate for your project or guidance from a trusted local source.</p>
-
-      <h2>Bulk mulch vs. bags</h2>
-      <p>Bulk and bagged material can differ in price, moisture, delivery cost, color consistency, and actual package volume. The bag count here is a volume equivalent, not a claim that one purchasing method will always be cheaper.</p>
-
-      <p><strong>Last reviewed:</strong> August 18, 2026.</p>
-    </div>
-  </section>
-
-  <script>
-    const root = document.querySelector('[data-mulch-calculator]');
-    if (root instanceof HTMLElement) {
-      const form = root.querySelector('form');
-      const area = root.querySelector('#area');
-      const depth = root.querySelector('#depth');
-      const waste = root.querySelector('#waste');
-      const bagSize = root.querySelector('#bagSize');
-      const orderOut = root.querySelector('[data-order]');
-      const baseOut = root.querySelector('[data-base]');
-      const adjustedOut = root.querySelector('[data-adjusted]');
-      const bagsOut = root.querySelector('[data-bags]');
-
-      function render() {
-        if (!(area instanceof HTMLInputElement) || !(depth instanceof HTMLInputElement) || !(waste instanceof HTMLInputElement) || !(bagSize instanceof HTMLSelectElement)) return;
-        const a = Number(area.value);
-        const d = Number(depth.value);
-        const w = Number(waste.value);
-        const b = Number(bagSize.value);
-        if (![a,d,w,b].every(Number.isFinite) || a < 0 || d < 0 || w < 0 || w > 100 || b <= 0) return;
-        const base = a * (d / 12) / 27;
-        const adjusted = base * (1 + w / 100);
-        const order = Math.ceil((adjusted - Number.EPSILON) / .25) * .25;
-        const bags = Math.ceil((adjusted * 27) / b);
-        if (orderOut) orderOut.textContent = order.toFixed(2);
-        if (baseOut) baseOut.textContent = base.toFixed(2);
-        if (adjustedOut) adjustedOut.textContent = adjusted.toFixed(2);
-        if (bagsOut) bagsOut.textContent = String(bags);
-        const url = new URL(window.location.href);
-        url.searchParams.set('area', String(a));
-        url.searchParams.set('depth', String(d));
-        url.searchParams.set('waste', String(w));
-        url.searchParams.set('bag', String(b));
-        history.replaceState(null, '', `${url.pathname}?${url.searchParams}`);
+        if (outputs.order) outputs.order.textContent = result.recommendedOrderCuYd.toFixed(2);
+        if (outputs.base) outputs.base.textContent = result.baseCuYd.toFixed(2);
+        if (outputs.adjusted) outputs.adjusted.textContent = result.adjustedCuYd.toFixed(2);
+        if (outputs.bags) outputs.bags.textContent = result.bagCount.toLocaleString('en-US');
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+        replaceToolState(window.location.pathname, formState(form, fields));
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.'; }
       }
+    };
 
-      if (form instanceof HTMLFormElement) form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
-      root.querySelector('[data-reset]')?.addEventListener('click', () => {
-        if (form instanceof HTMLFormElement) form.reset();
-        history.replaceState(null, '', window.location.pathname);
-        render();
-      });
-
-      const params = new URLSearchParams(window.location.search);
-      if (area instanceof HTMLInputElement && params.has('area')) area.value = params.get('area') ?? area.value;
-      if (depth instanceof HTMLInputElement && params.has('depth')) depth.value = params.get('depth') ?? depth.value;
-      if (waste instanceof HTMLInputElement && params.has('waste')) waste.value = params.get('waste') ?? waste.value;
-      if (bagSize instanceof HTMLSelectElement && params.has('bag')) bagSize.value = params.get('bag') ?? bagSize.value;
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => {
+      form.reset();
+      history.replaceState(null, '', window.location.pathname);
       render();
-    }
-  </script>
-</BaseLayout>
+    });
+
+    hydrateNamedFields(form, new URLSearchParams(window.location.search), fields);
+    render();
+  }
+</script>
+
+<style>
+  [data-mulch-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input, select { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 760px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
