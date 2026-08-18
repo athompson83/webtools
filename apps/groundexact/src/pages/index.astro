@@ -25,14 +25,22 @@ import { tools } from '../tools/registry';
     <div class="eyebrow">Calculator library</div>
     <h2 id="calculator-heading" style="font-family:Georgia,serif;font-size:clamp(2rem,4vw,3rem);margin:.3rem 0 0;">Plan the project before the store run.</h2>
     <div class="tool-grid">
-      {tools.map((tool) => (
-        <a class="tool-card" href={tool.status === 'implemented' ? `/tools/${tool.slug}` : `/tools/${tool.slug}`}>
+      {tools.map((tool) => tool.status === 'live' ? (
+        <a class="tool-card" href={`/tools/${tool.slug}`}>
           <div>
             <h3>{tool.name}</h3>
             <p>{tool.description}</p>
           </div>
-          <span class="arrow">{tool.status === 'implemented' ? 'Calculate →' : 'MVP planned →'}</span>
+          <span class="arrow">Calculate →</span>
         </a>
+      ) : (
+        <article class="tool-card" aria-label={`${tool.name} is being prepared`}>
+          <div>
+            <h3>{tool.name}</h3>
+            <p>{tool.description}</p>
+          </div>
+          <span class="arrow">Calculator engine ready</span>
+        </article>
       ))}
     </div>
   </section>
