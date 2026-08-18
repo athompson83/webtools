@@ -1,0 +1,116 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Fertilizer Coverage Calculator"
+  description="Use your fertilizer product label rate, lawn area, and bag weight to estimate pounds needed, bags to buy, and coverage per bag."
+  pathname="/tools/fertilizer-calculator"
+  intro="Use the application rate printed on your product label instead of relying on a one-size-fits-all fertilizer assumption."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact multiplies your lawn area by the product label's pounds-per-1,000-square-feet rate, then compares the required weight with the actual bag weight."
+  relatedTools={[]}
+>
+  <form slot="calculator" data-fertilizer-form novalidate>
+    <h2>Area and product label</h2>
+    <div class="field-grid">
+      <label>Lawn / treatment area (sq ft)<input name="area" type="number" inputmode="decimal" min="0" step="1" value="5000" required /></label>
+      <label>Label rate (lb per 1,000 sq ft)<input name="rate" type="number" inputmode="decimal" min="0" step="0.1" value="4" required /></label>
+      <label>Bag weight (lb)<input name="bag" type="number" inputmode="decimal" min="0" step="0.1" value="15" required /></label>
+    </div>
+    <p class="helper">Use the rate for your intended application from the actual product label. Rates can differ by product, turf type, purpose, and application.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate fertilizer</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Product needed</p>
+    <p class="result-primary"><span data-pounds>20</span> lb</p>
+    <p>Based only on the area and label rate you entered.</p>
+    <ul class="result-list">
+      <li><span>Whole bags to buy</span><strong><span data-bags>2</span></strong></li>
+      <li><span>Coverage per bag</span><strong><span data-coverage>3,750</span> sq ft</strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>pounds needed = (area sq ft ÷ 1,000) × label rate</code></p>
+    <p><code>bags needed = round up(pounds needed ÷ bag weight)</code></p>
+    <p>The calculator does not recommend a fertilizer formulation or application rate. Always follow the product label and any applicable local guidance or restrictions.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>5,000 sq ft at 4 lb per 1,000 sq ft</h2>
+    <p>The entered label rate requires 20 pounds of product. If the product is sold in 15-pound bags, two whole bags are required. At that same label rate, one 15-pound bag covers approximately 3,750 square feet.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculateFertilizer } from '../../tools/fertilizer/calculate';
+
+  const form = document.querySelector('[data-fertilizer-form]');
+  if (form instanceof HTMLFormElement) {
+    const poundsOut = document.querySelector('[data-pounds]');
+    const bagsOut = document.querySelector('[data-bags]');
+    const coverageOut = document.querySelector('[data-coverage]');
+    const errorOut = form.querySelector('[data-error]');
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateFertilizer({
+          areaSqFt: Number(data.get('area')),
+          labelRateLbPer1000SqFt: Number(data.get('rate')),
+          bagWeightLb: Number(data.get('bag')),
+        });
+        if (poundsOut) poundsOut.textContent = result.productNeededLb.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (bagsOut) bagsOut.textContent = String(result.bagsNeeded);
+        if (coverageOut) coverageOut.textContent = result.coveragePerBagSqFt.toLocaleString('en-US', { maximumFractionDigits: 0 });
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('area', String(data.get('area')));
+        url.searchParams.set('rate', String(data.get('rate')));
+        url.searchParams.set('bag', String(data.get('bag')));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) {
+          errorOut.hidden = false;
+          errorOut.textContent = error instanceof Error ? error.message : 'Check your values and try again.';
+        }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['area', 'rate', 'bag']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-fertilizer-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 760px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
