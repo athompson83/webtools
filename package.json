@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.14.0",
   "scripts": {
     "dev:groundexact": "pnpm --filter @webtools/groundexact dev",
+    "create:site": "node scripts/create-site.mjs",
     "build": "pnpm -r build",
     "test": "pnpm -r test && node --test scripts/lib/*.test.mjs",
     "lint": "pnpm -r lint",
