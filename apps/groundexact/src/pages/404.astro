@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Page Not Found"
+  description="The GroundExact page you requested could not be found."
+  pathname="/404"
+  noindex={true}
+>
+  <section class="not-found container">
+    <p class="eyebrow">404 · Page not found</p>
+    <h1>That measurement led somewhere else.</h1>
+    <p>The page may have moved, the address may be incomplete, or the calculator is not available at this URL.</p>
+    <div class="actions">
+      <a class="btn" href="/#calculators">Browse calculators</a>
+      <a class="secondary-link" href="/">Return home</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .not-found { padding-block: clamp(5rem, 14vw, 10rem); max-width: 800px; }
+  .not-found h1 { max-width: 12ch; margin: .4rem 0 1.25rem; font-size: clamp(3rem, 8vw, 6rem); line-height: .95; letter-spacing: -.055em; }
+  .not-found > p:not(.eyebrow) { max-width: 60ch; color: var(--muted-text); line-height: 1.7; }
+  .actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 2rem; }
+  .secondary-link { color: var(--text); font-weight: 750; }
+</style>
