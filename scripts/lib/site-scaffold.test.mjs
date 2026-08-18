@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { scaffoldSite, validateNewSiteRequest } from './site-scaffold.mjs';
+import { scaffoldCompleteSite } from './complete-site-scaffold.mjs';
+import { validateNewSiteRequest } from './site-scaffold.mjs';
 
 test('accepts a valid new site request', () => {
   const request = validateNewSiteRequest({
@@ -58,7 +59,7 @@ test('scaffolds an isolated app with legal/runtime defaults and registers it in 
       }],
     }));
 
-    scaffoldSite(root, {
+    scaffoldCompleteSite(root, {
       key: 'restaurantmath',
       name: 'RestaurantMath',
       domain: 'https://restaurantmath.com',
