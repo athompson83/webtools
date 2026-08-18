@@ -12,24 +12,68 @@ function walkFiles(dir) {
   return files;
 }
 
+function attributeValue(tag, attribute) {
+  const pattern = new RegExp(`\\b${attribute}=["']([^"']*)["']`, 'i');
+  return tag.match(pattern)?.[1] ?? null;
+}
+
 function canonicalUrlsFromHtml(html) {
-  return [...html.matchAll(/<link\s+[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["'][^>]*>/gi)].map((match) => match[1]);
+  const tags = [...html.matchAll(/<link\s+[^>]*>/gi)].map((match) => match[0]);
+  const urls = [];
+  for (const tag of tags) {
+    const rel = attributeValue(tag, 'rel')?.toLowerCase().split(/\s+/) ?? [];
+    if (!rel.includes('canonical')) continue;
+    const href = attributeValue(tag, 'href');
+    if (href) urls.push(href);
+  }
+  return urls;
+}
+
+function anchorHrefsFromHtml(html) {
+  return [...html.matchAll(/<a\s+[^>]*>/gi)]
+    .map((match) => attributeValue(match[0], 'href'))
+    .filter((href) => href !== null);
 }
 
 function robotsMetaContentsFromHtml(html) {
   const tags = [...html.matchAll(/<meta\s+[^>]*>/gi)].map((match) => match[0]);
   const contents = [];
   for (const tag of tags) {
-    const name = tag.match(/\bname=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const name = attributeValue(tag, 'name')?.toLowerCase();
     if (name !== 'robots') continue;
-    const content = tag.match(/\bcontent=["']([^"']*)["']/i)?.[1];
-    if (content !== undefined) contents.push(content.toLowerCase());
+    const content = attributeValue(tag, 'content');
+    if (content !== null) contents.push(content.toLowerCase());
   }
   return contents;
 }
 
 function sitemapLocs(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+}
+
+function builtPathExists(distDir, pathname) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return false;
+  }
+
+  const relative = decoded.replace(/^\/+/, '').replace(/\/+$/, '');
+  if (!relative) return fs.existsSync(path.join(distDir, 'index.html'));
+
+  const candidates = path.extname(relative)
+    ? [path.join(distDir, relative)]
+    : [
+        path.join(distDir, relative, 'index.html'),
+        path.join(distDir, `${relative}.html`),
+        path.join(distDir, relative),
+      ];
+  return candidates.some((candidate) => fs.existsSync(candidate));
+}
+
+function isNoindex(robotsMeta) {
+  return robotsMeta.some((content) => content.split(',').map((value) => value.trim()).includes('noindex'));
 }
 
 export function validateBuiltSite(rootDir, siteKey) {
@@ -65,20 +109,38 @@ export function validateBuiltSite(rootDir, siteKey) {
 
   for (const file of htmlFiles) {
     const html = fs.readFileSync(file, 'utf8');
+    const relativeFile = path.relative(distDir, file);
     const canonicals = canonicalUrlsFromHtml(html);
     const robotsMeta = robotsMetaContentsFromHtml(html);
 
-    for (const canonical of canonicals) {
-      const url = new URL(canonical);
-      if (url.origin !== site.productionOrigin) throw new Error(`${site.key} canonical points to foreign origin in ${path.relative(distDir, file)}: ${url.origin}`);
-      if (url.search || url.hash) throw new Error(`${site.key} canonical contains query or fragment in ${path.relative(distDir, file)}.`);
-      if (robotsMeta.some((content) => content.split(',').map((value) => value.trim()).includes('noindex')) && sitemapUrlSet.has(canonical)) {
-        throw new Error(`${site.key} noindex page appears in sitemap: ${canonical}`);
+    if (canonicals.length !== 1) {
+      throw new Error(`${site.key} built HTML must contain exactly one canonical URL in ${relativeFile}; found ${canonicals.length}.`);
+    }
+
+    const canonical = canonicals[0];
+    const canonicalUrl = new URL(canonical);
+    if (canonicalUrl.origin !== site.productionOrigin) throw new Error(`${site.key} canonical points to foreign origin in ${relativeFile}: ${canonicalUrl.origin}`);
+    if (canonicalUrl.search || canonicalUrl.hash) throw new Error(`${site.key} canonical contains query or fragment in ${relativeFile}.`);
+    if (isNoindex(robotsMeta) && sitemapUrlSet.has(canonical)) {
+      throw new Error(`${site.key} noindex page appears in sitemap: ${canonical}`);
+    }
+
+    for (const href of anchorHrefsFromHtml(html)) {
+      let target;
+      try {
+        target = new URL(href, canonical);
+      } catch {
+        throw new Error(`${site.key} invalid link in ${relativeFile}: ${href}`);
+      }
+      if (!['http:', 'https:'].includes(target.protocol)) continue;
+      if (target.origin !== site.productionOrigin) continue;
+      if (!builtPathExists(distDir, target.pathname)) {
+        throw new Error(`${site.key} broken internal link in ${relativeFile}: ${href}`);
       }
     }
 
     for (const foreignOrigin of foreignOrigins) {
-      if (html.includes(foreignOrigin)) throw new Error(`${site.key} build contains another portfolio origin in ${path.relative(distDir, file)}: ${foreignOrigin}`);
+      if (html.includes(foreignOrigin)) throw new Error(`${site.key} build contains another portfolio origin in ${relativeFile}: ${foreignOrigin}`);
     }
   }
 
