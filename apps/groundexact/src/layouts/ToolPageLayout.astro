@@ -1,4 +1,6 @@
 ---
+import { buildBreadcrumbSchema, buildCanonicalUrl, buildToolWebPageSchema } from '@webtools/seo';
+import { siteConfig } from '../../site.config';
 import BaseLayout from './BaseLayout.astro';
 import { tools } from '../tools/registry';
 
@@ -28,8 +30,16 @@ const {
 const toolSlug = pathname.split('/').filter(Boolean).at(-1);
 const registryTool = tools.find((tool) => tool.slug === toolSlug);
 const noindex = registryTool?.status !== 'live';
+const canonical = buildCanonicalUrl(siteConfig.productionOrigin, pathname);
+const structuredData = [
+  buildToolWebPageSchema({ name: title, description, url: canonical }),
+  buildBreadcrumbSchema([
+    { name: 'Home', url: buildCanonicalUrl(siteConfig.productionOrigin, '/') },
+    { name: title, url: canonical },
+  ]),
+];
 ---
-<BaseLayout title={title} description={description} pathname={pathname} noindex={noindex}>
+<BaseLayout title={title} description={description} pathname={pathname} noindex={noindex} structuredData={structuredData}>
   <article class="tool-page container">
     <header class="tool-heading">
       <p class="eyebrow">{eyebrow}</p>
