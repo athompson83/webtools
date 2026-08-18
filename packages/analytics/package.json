@@ -5,10 +5,16 @@
   "type": "module",
   "exports": { ".": "./src/index.ts" },
   "scripts": {
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings=0",
     "build": "tsc --noEmit"
   },
-  "devDependencies": { "typescript": "^5.9.2", "vitest": "^3.2.4" }
+  "dependencies": {
+    "@webtools/compliance": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
 }
