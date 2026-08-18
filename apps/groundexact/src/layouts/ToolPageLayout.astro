@@ -1,8 +1,9 @@
 ---
 import { buildBreadcrumbSchema, buildCanonicalUrl, buildToolWebPageSchema } from '@webtools/seo';
 import { siteConfig } from '../../site.config';
+import ToolActions from '../components/ToolActions.astro';
 import BaseLayout from './BaseLayout.astro';
-import { tools } from '../tools/registry';
+import { liveTools, tools } from '../tools/registry';
 
 interface RelatedTool { href: string; name: string }
 interface Props {
@@ -38,6 +39,14 @@ const structuredData = [
     { name: title, url: canonical },
   ]),
 ];
+
+const automaticRelatedTools: RelatedTool[] = registryTool
+  ? liveTools
+      .filter((tool) => tool.slug !== registryTool.slug && tool.category === registryTool.category)
+      .slice(0, 3)
+      .map((tool) => ({ href: `/tools/${tool.slug}`, name: tool.name }))
+  : [];
+const displayedRelatedTools = relatedTools.length > 0 ? relatedTools : automaticRelatedTools;
 ---
 <BaseLayout title={title} description={description} pathname={pathname} noindex={noindex} structuredData={structuredData}>
   <article class="tool-page container">
@@ -57,6 +66,8 @@ const structuredData = [
       </aside>
     </section>
 
+    <ToolActions />
+
     <section class="tool-copy">
       <div>
         <p class="eyebrow">How it works</p>
@@ -71,12 +82,12 @@ const structuredData = [
     <slot name="example" />
     <slot name="faq" />
 
-    {relatedTools.length > 0 && (
+    {displayedRelatedTools.length > 0 && (
       <section class="related-tools" aria-labelledby="related-heading">
         <p class="eyebrow">Keep planning</p>
         <h2 id="related-heading">Related calculators</h2>
         <div class="related-grid">
-          {relatedTools.map((tool) => <a href={tool.href}>{tool.name}<span aria-hidden="true"> →</span></a>)}
+          {displayedRelatedTools.map((tool) => <a href={tool.href}>{tool.name}<span aria-hidden="true"> →</span></a>)}
         </div>
       </section>
     )}
@@ -102,5 +113,10 @@ const structuredData = [
     .calculator-workspace, .tool-copy { grid-template-columns: 1fr; }
     .result-panel { border-left: 0; border-top: 1px solid var(--border); }
     .related-grid { grid-template-columns: 1fr; }
+  }
+  @media print {
+    .tool-page { padding-block: 0; }
+    .calculator-workspace { box-shadow: none; }
+    .related-tools { display: none; }
   }
 </style>
