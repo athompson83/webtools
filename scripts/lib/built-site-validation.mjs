@@ -87,8 +87,10 @@ export function validateBuiltSite(rootDir, siteKey) {
 
   const robotsPath = path.join(distDir, 'robots.txt');
   const sitemapPath = path.join(distDir, 'sitemap.xml');
+  const adsTxtPath = path.join(distDir, 'ads.txt');
   if (!fs.existsSync(robotsPath)) throw new Error(`${site.key} build is missing robots.txt.`);
   if (!fs.existsSync(sitemapPath)) throw new Error(`${site.key} build is missing sitemap.xml.`);
+  if (!fs.existsSync(adsTxtPath)) throw new Error(`${site.key} build is missing ads.txt.`);
 
   const robots = fs.readFileSync(robotsPath, 'utf8');
   const expectedSitemap = `Sitemap: ${site.productionOrigin}/sitemap.xml`;
