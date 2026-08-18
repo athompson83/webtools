@@ -1,0 +1,48 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { tools } from '../tools/registry';
+---
+<BaseLayout
+  title="Outdoor Project Calculators"
+  description="Calculate mulch, gravel, topsoil, sod, pavers, retaining walls, fence materials, fertilizer, grass seed, and cubic yards with practical purchase guidance."
+  pathname="/"
+>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="eyebrow">Outdoor project planning</div>
+        <h1 class="display">Measure once.<br />Buy the right amount.</h1>
+        <p class="lead">GroundExact turns project measurements into practical material quantities, waste-adjusted order recommendations, package equivalents, and shopping guidance.</p>
+      </div>
+      <div class="hero-note">
+        <strong>Built for decisions, not just math.</strong>
+        <p>Enter your dimensions, adjust real-world assumptions, then see what you actually need to order.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="calculators" class="container" aria-labelledby="calculator-heading">
+    <div class="eyebrow">Calculator library</div>
+    <h2 id="calculator-heading" style="font-family:Georgia,serif;font-size:clamp(2rem,4vw,3rem);margin:.3rem 0 0;">Plan the project before the store run.</h2>
+    <div class="tool-grid">
+      {tools.map((tool) => (
+        <a class="tool-card" href={tool.status === 'implemented' ? `/tools/${tool.slug}` : `/tools/${tool.slug}`}>
+          <div>
+            <h3>{tool.name}</h3>
+            <p>{tool.description}</p>
+          </div>
+          <span class="arrow">{tool.status === 'implemented' ? 'Calculate →' : 'MVP planned →'}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container prose">
+      <div class="eyebrow">How GroundExact works</div>
+      <h2>Measure → Calculate → Adjust → Buy</h2>
+      <p>Most project calculators stop at a raw number. GroundExact is designed to continue through the purchase decision. Results show the underlying calculated need, optional waste allowance, a practical rounded order amount, and package equivalents where they are useful.</p>
+      <p>Material densities, manufacturer application rates, product dimensions, and supplier packaging can vary. When a value is product-specific, GroundExact asks for the actual label or product value rather than presenting one universal assumption as fact.</p>
+    </div>
+  </section>
+</BaseLayout>
