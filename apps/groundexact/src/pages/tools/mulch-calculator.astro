@@ -1,0 +1,141 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="Mulch Calculator"
+  description="Calculate how many cubic yards or bags of mulch you need from project area, depth, and an adjustable waste allowance."
+  pathname="/tools/mulch-calculator"
+>
+  <section class="hero" style="padding-bottom:24px;">
+    <div class="container">
+      <div class="eyebrow">Outdoor material calculator</div>
+      <h1 class="display" style="font-size:clamp(2.7rem,6vw,4.9rem);">Mulch calculator</h1>
+      <p class="lead">Turn bed area and mulch depth into cubic yards, a practical rounded bulk order, and bag equivalents.</p>
+    </div>
+  </section>
+
+  <section class="container">
+    <div class="calc-shell" data-mulch-calculator>
+      <form class="calc-panel" novalidate>
+        <div class="field-grid">
+          <div class="field">
+            <label for="area">Project area (sq ft)</label>
+            <input id="area" name="area" type="number" inputmode="decimal" min="0" step="0.1" value="327" required />
+          </div>
+          <div class="field">
+            <label for="depth">Mulch depth (inches)</label>
+            <input id="depth" name="depth" type="number" inputmode="decimal" min="0" step="0.25" value="3" required />
+          </div>
+          <div class="field">
+            <label for="waste">Extra / waste allowance (%)</label>
+            <input id="waste" name="waste" type="number" inputmode="decimal" min="0" max="100" step="1" value="5" required />
+          </div>
+          <div class="field">
+            <label for="bagSize">Bag size (cu ft)</label>
+            <select id="bagSize" name="bagSize">
+              <option value="1.5">1.5 cu ft</option>
+              <option value="2" selected>2 cu ft</option>
+              <option value="3">3 cu ft</option>
+            </select>
+          </div>
+        </div>
+        <div class="calc-actions">
+          <button class="btn" type="submit">Calculate mulch</button>
+          <button class="btn secondary" type="button" data-reset>Reset</button>
+        </div>
+        <div class="notice">Use measured bed area when possible. Irregular beds can be divided into rectangles/circles and added together. Mulch compaction and supplier rounding vary.</div>
+      </form>
+
+      <aside class="result-panel" aria-live="polite" aria-atomic="true">
+        <div class="result-kicker">Recommended bulk order</div>
+        <div class="result-primary"><span data-order>3.25</span> yd³</div>
+        <p>Rounded upward to the nearest quarter cubic yard so the recommendation is practical for ordering.</p>
+        <ul class="result-list">
+          <li><span>Calculated need</span><strong><span data-base>3.03</span> yd³</strong></li>
+          <li><span>With extra allowance</span><strong><span data-adjusted>3.18</span> yd³</strong></li>
+          <li><span>Bag equivalent</span><strong><span data-bags>43</span> bags</strong></li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container prose">
+      <h2>How to use the mulch calculator</h2>
+      <ol>
+        <li>Measure the total surface area you plan to cover in square feet.</li>
+        <li>Choose the mulch depth in inches.</li>
+        <li>Add an optional extra allowance for uneven ground, settling, or measurement uncertainty.</li>
+        <li>Compare the bulk-yard recommendation with the bag equivalent.</li>
+      </ol>
+
+      <h2>Formula and methodology</h2>
+      <p>GroundExact converts depth from inches to feet, multiplies that depth by square footage to get cubic feet, then divides by 27 because one cubic yard contains 27 cubic feet.</p>
+      <p><code>cubic yards = area (sq ft) × (depth inches ÷ 12) ÷ 27</code></p>
+      <p>The optional extra allowance is applied after the base volume is calculated. The displayed bulk order is then rounded upward to the nearest 0.25 cubic yard.</p>
+
+      <h2>Worked example</h2>
+      <p>A 327-square-foot bed covered 3 inches deep requires about 3.03 cubic yards before any extra allowance. With 5% extra, the calculated quantity is about 3.18 cubic yards, so GroundExact recommends a 3.25-cubic-yard bulk order. At 2 cubic feet per bag, the same adjusted amount is approximately 43 bags.</p>
+
+      <h2>What depth should I use?</h2>
+      <p>The correct depth depends on the material, existing bed condition, purpose, and local horticultural guidance. GroundExact intentionally does not force one universal recommended depth. Use the depth appropriate for your project or guidance from a trusted local source.</p>
+
+      <h2>Bulk mulch vs. bags</h2>
+      <p>Bulk and bagged material can differ in price, moisture, delivery cost, color consistency, and actual package volume. The bag count here is a volume equivalent, not a claim that one purchasing method will always be cheaper.</p>
+
+      <p><strong>Last reviewed:</strong> August 18, 2026.</p>
+    </div>
+  </section>
+
+  <script>
+    const root = document.querySelector('[data-mulch-calculator]');
+    if (root instanceof HTMLElement) {
+      const form = root.querySelector('form');
+      const area = root.querySelector('#area');
+      const depth = root.querySelector('#depth');
+      const waste = root.querySelector('#waste');
+      const bagSize = root.querySelector('#bagSize');
+      const orderOut = root.querySelector('[data-order]');
+      const baseOut = root.querySelector('[data-base]');
+      const adjustedOut = root.querySelector('[data-adjusted]');
+      const bagsOut = root.querySelector('[data-bags]');
+
+      function render() {
+        if (!(area instanceof HTMLInputElement) || !(depth instanceof HTMLInputElement) || !(waste instanceof HTMLInputElement) || !(bagSize instanceof HTMLSelectElement)) return;
+        const a = Number(area.value);
+        const d = Number(depth.value);
+        const w = Number(waste.value);
+        const b = Number(bagSize.value);
+        if (![a,d,w,b].every(Number.isFinite) || a < 0 || d < 0 || w < 0 || w > 100 || b <= 0) return;
+        const base = a * (d / 12) / 27;
+        const adjusted = base * (1 + w / 100);
+        const order = Math.ceil((adjusted - Number.EPSILON) / .25) * .25;
+        const bags = Math.ceil((adjusted * 27) / b);
+        if (orderOut) orderOut.textContent = order.toFixed(2);
+        if (baseOut) baseOut.textContent = base.toFixed(2);
+        if (adjustedOut) adjustedOut.textContent = adjusted.toFixed(2);
+        if (bagsOut) bagsOut.textContent = String(bags);
+        const url = new URL(window.location.href);
+        url.searchParams.set('area', String(a));
+        url.searchParams.set('depth', String(d));
+        url.searchParams.set('waste', String(w));
+        url.searchParams.set('bag', String(b));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams}`);
+      }
+
+      if (form instanceof HTMLFormElement) form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+      root.querySelector('[data-reset]')?.addEventListener('click', () => {
+        if (form instanceof HTMLFormElement) form.reset();
+        history.replaceState(null, '', window.location.pathname);
+        render();
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      if (area instanceof HTMLInputElement && params.has('area')) area.value = params.get('area') ?? area.value;
+      if (depth instanceof HTMLInputElement && params.has('depth')) depth.value = params.get('depth') ?? depth.value;
+      if (waste instanceof HTMLInputElement && params.has('waste')) waste.value = params.get('waste') ?? waste.value;
+      if (bagSize instanceof HTMLSelectElement && params.has('bag')) bagSize.value = params.get('bag') ?? bagSize.value;
+      render();
+    }
+  </script>
+</BaseLayout>
