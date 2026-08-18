@@ -10,6 +10,13 @@ export interface ToolWebPageSchemaInput {
   dateModified?: string;
 }
 
+export interface RobotsPolicyInput {
+  origin: string;
+  allowSearchIndexing: boolean;
+  allowOaiSearchBot: boolean;
+  allowGptBot: boolean;
+}
+
 export function buildCanonicalUrl(origin: string, pathname: string): string {
   const url = new URL(pathname, origin);
   url.search = '';
@@ -51,4 +58,25 @@ export function buildFaqSchema(items: Array<{ question: string; answer: string }
       acceptedAnswer: { '@type': 'Answer', text: item.answer },
     })),
   } as const;
+}
+
+export function buildRobotsTxt(input: RobotsPolicyInput): string {
+  const origin = new URL(input.origin);
+  const generalDirective = input.allowSearchIndexing ? 'Allow: /' : 'Disallow: /';
+  const oaiDirective = input.allowOaiSearchBot ? 'Allow: /' : 'Disallow: /';
+  const gptDirective = input.allowGptBot ? 'Allow: /' : 'Disallow: /';
+
+  return [
+    'User-agent: *',
+    generalDirective,
+    '',
+    'User-agent: OAI-SearchBot',
+    oaiDirective,
+    '',
+    'User-agent: GPTBot',
+    gptDirective,
+    '',
+    `Sitemap: ${origin.origin}/sitemap-index.xml`,
+    '',
+  ].join('\n');
 }
