@@ -14,6 +14,7 @@ interface Props {
 const { title, description, pathname = '/', noindex = false, structuredData = [] } = Astro.props;
 const canonical = buildCanonicalUrl(siteConfig.productionOrigin, pathname);
 const fullTitle = title.includes(siteConfig.name) ? title : `${title} | ${siteConfig.name}`;
+const effectiveNoindex = noindex || !siteConfig.allowSearchIndexing;
 
 const organizationSchema = {
   '@context': 'https://schema.org',
@@ -41,7 +42,7 @@ const schemas = [organizationSchema, websiteSchema, ...structuredData];
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
+    <meta name="robots" content={effectiveNoindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteConfig.name} />
     <meta property="og:title" content={fullTitle} />
