@@ -1,3 +1,5 @@
+import { canActivateOptionalFeature, type ConsentState } from '@webtools/compliance';
+
 export type AnalyticsEventName =
   | 'tool_view'
   | 'tool_calculate'
@@ -21,3 +23,20 @@ export interface AnalyticsAdapter {
 export const noopAnalytics: AnalyticsAdapter = {
   track: () => undefined,
 };
+
+export interface ConsentAwareAnalyticsInput {
+  adapter: AnalyticsAdapter;
+  enabled: boolean;
+  consentRequired: boolean;
+  consent: ConsentState;
+}
+
+export function consentAwareAnalytics(input: ConsentAwareAnalyticsInput): AnalyticsAdapter {
+  const allowed = canActivateOptionalFeature({
+    enabled: input.enabled,
+    consentRequired: input.consentRequired,
+    consent: input.consent,
+  });
+  if (!allowed) return noopAnalytics;
+  return input.adapter;
+}
