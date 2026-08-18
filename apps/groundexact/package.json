@@ -14,6 +14,7 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.5.0",
     "@webtools/calculator-core": "workspace:*",
+    "@webtools/seo": "workspace:*",
     "@webtools/site-config": "workspace:*",
     "astro": "^5.13.2"
   },
