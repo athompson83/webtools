@@ -16,6 +16,18 @@ function canonicalUrlsFromHtml(html) {
   return [...html.matchAll(/<link\s+[^>]*rel=["']canonical["'][^>]*href=["']([^"']+)["'][^>]*>/gi)].map((match) => match[1]);
 }
 
+function robotsMetaContentsFromHtml(html) {
+  const tags = [...html.matchAll(/<meta\s+[^>]*>/gi)].map((match) => match[0]);
+  const contents = [];
+  for (const tag of tags) {
+    const name = tag.match(/\bname=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (name !== 'robots') continue;
+    const content = tag.match(/\bcontent=["']([^"']*)["']/i)?.[1];
+    if (content !== undefined) contents.push(content.toLowerCase());
+  }
+  return contents;
+}
+
 function sitemapLocs(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
 }
@@ -39,7 +51,9 @@ export function validateBuiltSite(rootDir, siteKey) {
   if (!robots.includes(expectedSitemap)) throw new Error(`${site.key} robots.txt does not reference its own sitemap.`);
 
   const sitemap = fs.readFileSync(sitemapPath, 'utf8');
-  for (const loc of sitemapLocs(sitemap)) {
+  const sitemapUrls = sitemapLocs(sitemap);
+  const sitemapUrlSet = new Set(sitemapUrls);
+  for (const loc of sitemapUrls) {
     const url = new URL(loc);
     if (url.origin !== site.productionOrigin) throw new Error(`${site.key} sitemap contains foreign origin: ${url.origin}`);
     if (url.search || url.hash) throw new Error(`${site.key} sitemap contains non-canonical URL: ${loc}`);
@@ -51,10 +65,16 @@ export function validateBuiltSite(rootDir, siteKey) {
 
   for (const file of htmlFiles) {
     const html = fs.readFileSync(file, 'utf8');
-    for (const canonical of canonicalUrlsFromHtml(html)) {
+    const canonicals = canonicalUrlsFromHtml(html);
+    const robotsMeta = robotsMetaContentsFromHtml(html);
+
+    for (const canonical of canonicals) {
       const url = new URL(canonical);
       if (url.origin !== site.productionOrigin) throw new Error(`${site.key} canonical points to foreign origin in ${path.relative(distDir, file)}: ${url.origin}`);
       if (url.search || url.hash) throw new Error(`${site.key} canonical contains query or fragment in ${path.relative(distDir, file)}.`);
+      if (robotsMeta.some((content) => content.split(',').map((value) => value.trim()).includes('noindex')) && sitemapUrlSet.has(canonical)) {
+        throw new Error(`${site.key} noindex page appears in sitemap: ${canonical}`);
+      }
     }
 
     for (const foreignOrigin of foreignOrigins) {
