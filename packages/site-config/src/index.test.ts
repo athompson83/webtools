@@ -65,4 +65,9 @@ describe('site configuration', () => {
     expect(absoluteUrl(validConfig(), '/privacy')).toBe('https://example.com/privacy');
     expect(absoluteUrl(validConfig(), 'tools/example')).toBe('https://example.com/tools/example');
   });
+
+  it('rejects absolute and protocol-relative paths that escape the configured origin', () => {
+    expect(() => absoluteUrl(validConfig(), 'https://other.com/page')).toThrow(/configured origin/i);
+    expect(() => absoluteUrl(validConfig(), '//other.com/page')).toThrow(/configured origin/i);
+  });
 });
