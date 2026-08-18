@@ -8,7 +8,6 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
   intro="Convert a rectangular project area and depth into cubic feet and cubic yards without hiding the conversion math."
   reviewedDate="August 18, 2026"
   formulaSummary="GroundExact multiplies length by width to calculate square footage, converts depth from inches to feet, multiplies to get cubic feet, and divides by 27 because one cubic yard contains 27 cubic feet."
-  relatedTools={[{ href: '/tools/mulch-calculator', name: 'Mulch Calculator' }]}
 >
   <form slot="calculator" data-cubic-yard-form novalidate>
     <h2>Project measurements</h2>
@@ -48,8 +47,10 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
 </ToolPageLayout>
 
 <script>
+  import { formState, hydrateNamedFields, readNumber, replaceToolState } from '@webtools/tool-runtime';
   import { calculateCubicYards } from '../../tools/cubic-yard/calculate';
 
+  const fields = ['length', 'width', 'depth'] as const;
   const form = document.querySelector('[data-cubic-yard-form]');
   if (form instanceof HTMLFormElement) {
     const areaOut = document.querySelector('[data-area]');
@@ -61,20 +62,15 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
       try {
         const data = new FormData(form);
         const result = calculateCubicYards({
-          lengthFt: Number(data.get('length')),
-          widthFt: Number(data.get('width')),
-          depthInches: Number(data.get('depth')),
+          lengthFt: readNumber(data.get('length'), 'length', { min: 0 }),
+          widthFt: readNumber(data.get('width'), 'width', { min: 0 }),
+          depthInches: readNumber(data.get('depth'), 'depth', { min: 0 }),
         });
         if (areaOut) areaOut.textContent = result.areaSqFt.toLocaleString('en-US', { maximumFractionDigits: 2 });
         if (cubicFeetOut) cubicFeetOut.textContent = result.cubicFeet.toLocaleString('en-US', { maximumFractionDigits: 2 });
         if (cubicYardsOut) cubicYardsOut.textContent = result.cubicYards.toLocaleString('en-US', { maximumFractionDigits: 2 });
         if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
-
-        const url = new URL(window.location.href);
-        url.searchParams.set('length', String(data.get('length')));
-        url.searchParams.set('width', String(data.get('width')));
-        url.searchParams.set('depth', String(data.get('depth')));
-        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+        replaceToolState(window.location.pathname, formState(form, fields));
       } catch (error) {
         if (errorOut instanceof HTMLElement) {
           errorOut.hidden = false;
@@ -84,14 +80,13 @@ import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
     };
 
     form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
-    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => {
+      form.reset();
+      history.replaceState(null, '', window.location.pathname);
+      render();
+    });
 
-    const params = new URLSearchParams(window.location.search);
-    for (const name of ['length', 'width', 'depth']) {
-      const input = form.elements.namedItem(name);
-      const value = params.get(name);
-      if (input instanceof HTMLInputElement && value !== null) input.value = value;
-    }
+    hydrateNamedFields(form, new URLSearchParams(window.location.search), fields);
     render();
   }
 </script>
