@@ -15,6 +15,17 @@ const { title, description, pathname = '/', noindex = false, structuredData = []
 const canonical = buildCanonicalUrl(siteConfig.productionOrigin, pathname);
 const fullTitle = title.includes(siteConfig.name) ? title : `${title} | ${siteConfig.name}`;
 const effectiveNoindex = noindex || !siteConfig.allowSearchIndexing;
+const themeStyle = [
+  `--bg:${siteConfig.brand.background}`,
+  `--background:${siteConfig.brand.background}`,
+  `--surface:${siteConfig.brand.surface}`,
+  `--text:${siteConfig.brand.text}`,
+  `--muted:${siteConfig.brand.mutedText}`,
+  `--muted-text:${siteConfig.brand.mutedText}`,
+  `--accent:${siteConfig.brand.accent}`,
+  `--accent-strong:${siteConfig.brand.accentStrong}`,
+  `--border:${siteConfig.brand.border}`,
+].join(';');
 
 const organizationSchema = {
   '@context': 'https://schema.org',
@@ -35,13 +46,16 @@ const websiteSchema = {
 const schemas = [organizationSchema, websiteSchema, ...structuredData];
 ---
 <!doctype html>
-<html lang="en">
+<html lang="en" style={themeStyle}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <meta name="theme-color" content={siteConfig.brand.accentStrong} />
     <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="robots" content={effectiveNoindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={siteConfig.name} />
