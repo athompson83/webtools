@@ -25,8 +25,18 @@
     "seo_rule": "never publish thin placeholder calculator URLs or mass keyword/city permutations",
     "cross_site_link_rule": "no all-to-all reciprocal footer network"
   },
+  "status_meanings": {
+    "live": "fully certified for public/indexable release",
+    "page-ready": "calculation engine and public page exist but repository/build/browser publication gates have not yet been certified",
+    "engine-ready": "calculation engine exists but public page is incomplete",
+    "planned": "neither production engine nor page is complete"
+  },
   "current_state": {
-    "groundexact_live_page": "/tools/mulch-calculator",
+    "page_ready_tools": [
+      "mulch-calculator",
+      "fertilizer-calculator",
+      "cubic-yard-calculator"
+    ],
     "engine_ready_tools": [
       "gravel-calculator",
       "topsoil-calculator",
@@ -34,9 +44,7 @@
       "paver-calculator",
       "retaining-wall-calculator",
       "fence-calculator",
-      "fertilizer-calculator",
-      "grass-seed-calculator",
-      "cubic-yard-calculator"
+      "grass-seed-calculator"
     ],
     "shared_packages_present": [
       "@webtools/calculator-core",
@@ -45,7 +53,7 @@
       "@webtools/seo"
     ],
     "informational_and_legal_pages": "implemented through the typed static page registry and root dynamic route",
-    "important_integrity_note": "engine-ready means the calculation module exists but the public calculator page is not yet complete and must not be treated as live/indexable"
+    "important_integrity_note": "No calculator should be promoted to live until Codex has actually run the publication/build/browser gates. This handoff intentionally makes zero claims that current remote commits compile or pass tests because the authoring environment could not obtain a local GitHub clone."
   },
   "first_action": {
     "instruction": "Establish a verified green local baseline before adding features.",
@@ -68,7 +76,8 @@
         "Make workspace install deterministic.",
         "Make lint, typecheck, tests, and build green across every workspace.",
         "Confirm Astro build produces only intended static routes.",
-        "Confirm no unfinished tool URL is linked or emitted as a live SEO page."
+        "Confirm no unfinished tool URL is represented as a certified live SEO page.",
+        "Promote page-ready status only after the tool-specific publication gates also pass."
       ]
     },
     {
@@ -77,7 +86,8 @@
       "requirements": [
         "Run every calculator golden-case test.",
         "Add negative/validation cases for every engine.",
-        "Do not duplicate formulas in page scripts; browser UI must call/import the production calculation module.",
+        "Refactor the existing Mulch page so its browser UI imports/calls the production calculateMulch module instead of duplicating the formula inline.",
+        "Do not duplicate formulas in new page scripts; browser UI must call/import the production calculation module.",
         "Verify supplier-specific values remain explicit inputs."
       ]
     },
@@ -86,7 +96,8 @@
       "name": "Reusable calculator UI",
       "requirements": [
         "Use ToolPageLayout.astro as the common composition boundary unless a better tested abstraction is demonstrably needed.",
-        "Extract reusable field/result components only after at least two calculator pages prove the abstraction.",
+        "Cubic Yard and Fertilizer are the first two page patterns built on the shared layout; inspect them before extracting more UI primitives.",
+        "Extract reusable field/result components only after the existing patterns prove the abstraction.",
         "Preserve the north-star flow: Measure -> Calculate -> Adjust -> Buy.",
         "Implement shareable state using query parameters while canonicalizing to the clean URL.",
         "Add reset, print, and copy/share behavior in a reusable way."
@@ -96,19 +107,17 @@
       "phase": 4,
       "name": "Finish GroundExact calculator pages",
       "tool_order": [
-        "cubic-yard-calculator",
         "topsoil-calculator",
         "gravel-calculator",
         "sod-calculator",
-        "fertilizer-calculator",
         "grass-seed-calculator",
         "paver-calculator",
         "retaining-wall-calculator",
         "fence-calculator"
       ],
       "requirements": [
-        "Each page needs working UI, visible methodology, a verified worked example, reviewed date, assumptions, and only genuinely related live-tool links.",
-        "Only change registry status from engine-ready to live after the publication gate in docs/seo/groundexact-page-map.md passes."
+        "Each page needs working UI, visible methodology, a verified worked example, reviewed date, assumptions, and only genuinely related certified-live-tool links.",
+        "Only change registry status to live after the publication gate in docs/seo/groundexact-page-map.md passes."
       ]
     },
     {
@@ -119,7 +128,7 @@
         "Add WebSite, Organization, BreadcrumbList, and truthful WebPage schema where appropriate.",
         "Keep OAI-SearchBot allowed unless the owner changes that decision.",
         "Keep GPTBot separately configurable.",
-        "Verify sitemap contains only intended canonical URLs.",
+        "Verify sitemap contains only intended canonical URLs at release time.",
         "Prepare IndexNow and webmaster/search-console documentation without introducing unnecessary server infrastructure."
       ]
     },
@@ -161,16 +170,16 @@
     "Do not add a database, auth, CMS, queues, or server API speculatively.",
     "Do not hard-code product application rates, supplier densities, package coverage, or prices as universal facts.",
     "Do not invent sources, statistics, testimonials, review counts, user counts, or prices.",
-    "Do not mark unfinished pages live to make the homepage appear complete.",
+    "Do not mark unfinished or unverified pages live to make the homepage appear complete.",
     "Do not merge formula logic into page markup when a calculator module exists.",
     "Keep each site's domain and provider IDs isolated."
   ],
   "definition_of_done_for_groundexact_mvp": [
-    "All ten calculator pages are live and pass their publication gates.",
+    "All ten calculator pages are certified live and pass their publication gates.",
     "All calculator engines have positive and invalid-input tests.",
     "All root informational/legal pages render and match configured runtime behavior.",
     "No broken internal links.",
-    "No unfinished URLs in sitemap.",
+    "No unfinished URLs are represented as certified indexable content.",
     "Canonical origin is groundexact.com throughout built output.",
     "OAI-SearchBot policy is correct and explicit.",
     "Performance and accessibility checks do not reveal material blockers.",
