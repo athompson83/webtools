@@ -1,0 +1,115 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+---
+<ToolPageLayout
+  title="Sod Calculator"
+  description="Estimate sod coverage, waste-adjusted square footage, rolls, and pallets using the coverage values for the product you plan to buy."
+  pathname="/tools/sod-calculator"
+  intro="Turn lawn area into a practical sod purchase quantity while keeping roll and pallet coverage tied to the actual product or supplier."
+  reviewedDate="August 18, 2026"
+  formulaSummary="GroundExact applies your selected extra allowance to the measured lawn area, then divides the adjusted area by the roll and pallet coverage values you enter and rounds each purchase quantity upward."
+  relatedTools={[]}
+>
+  <form slot="calculator" data-sod-form novalidate>
+    <h2>Lawn and product details</h2>
+    <div class="field-grid">
+      <label>Lawn area (sq ft)<input name="area" type="number" inputmode="decimal" min="0.01" step="1" value="2500" required /></label>
+      <label>Extra / waste (%)<input name="waste" type="number" inputmode="decimal" min="0" max="100" step="1" value="5" required /></label>
+      <label>Coverage per roll (sq ft)<input name="rollCoverage" type="number" inputmode="decimal" min="0.01" step="0.1" value="10" required /></label>
+      <label>Coverage per pallet (sq ft)<input name="palletCoverage" type="number" inputmode="decimal" min="0.01" step="1" value="450" required /></label>
+    </div>
+    <p class="helper">Sod dimensions vary by grower, region, and product. Use the coverage printed by your supplier rather than assuming one universal roll or pallet size.</p>
+    <div class="calc-actions">
+      <button class="btn" type="submit">Calculate sod</button>
+      <button class="btn secondary" type="button" data-reset>Reset</button>
+    </div>
+    <p class="notice" data-error hidden></p>
+  </form>
+
+  <div slot="results">
+    <p class="result-kicker">Adjusted coverage to buy</p>
+    <p class="result-primary"><span data-adjusted>2,625</span> sq ft</p>
+    <p>Your measured area plus the extra allowance you selected.</p>
+    <ul class="result-list">
+      <li><span>Rolls needed</span><strong><span data-rolls>263</span></strong></li>
+      <li><span>Pallets needed</span><strong><span data-pallets>6</span></strong></li>
+    </ul>
+  </div>
+
+  <div slot="methodology">
+    <p><code>adjusted area = measured area × (1 + extra percentage)</code></p>
+    <p><code>rolls = ceiling(adjusted area ÷ coverage per roll)</code></p>
+    <p><code>pallets = ceiling(adjusted area ÷ coverage per pallet)</code></p>
+    <p>Actual ordering can also depend on supplier minimums, pallet break policies, irregular lawn shapes, damaged pieces, and installation pattern. The calculator does not assume a universal sod unit size.</p>
+  </div>
+
+  <section slot="example" class="example-block">
+    <p class="eyebrow">Worked example</p>
+    <h2>2,500 sq ft with 5% extra</h2>
+    <p>A 2,500-square-foot lawn becomes 2,625 square feet after a 5% extra allowance. If the selected sod covers 10 square feet per roll and 450 square feet per pallet, that equals 263 rolls or 6 whole pallets.</p>
+  </section>
+</ToolPageLayout>
+
+<script>
+  import { calculateSod } from '../../tools/sod/calculate';
+
+  const form = document.querySelector('[data-sod-form]');
+  if (form instanceof HTMLFormElement) {
+    const errorOut = form.querySelector('[data-error]');
+    const adjustedOut = document.querySelector('[data-adjusted]');
+    const rollsOut = document.querySelector('[data-rolls]');
+    const palletsOut = document.querySelector('[data-pallets]');
+
+    const render = () => {
+      try {
+        const data = new FormData(form);
+        const result = calculateSod({
+          areaSqFt: Number(data.get('area')),
+          wastePercent: Number(data.get('waste')),
+          rollCoverageSqFt: Number(data.get('rollCoverage')),
+          palletCoverageSqFt: Number(data.get('palletCoverage')),
+        });
+
+        if (adjustedOut) adjustedOut.textContent = result.adjustedAreaSqFt.toLocaleString('en-US', { maximumFractionDigits: 2 });
+        if (rollsOut) rollsOut.textContent = result.rollsNeeded.toLocaleString('en-US');
+        if (palletsOut) palletsOut.textContent = result.palletsNeeded.toLocaleString('en-US');
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = true; errorOut.textContent = ''; }
+
+        const url = new URL(window.location.href);
+        for (const name of ['area', 'waste', 'rollCoverage', 'palletCoverage']) url.searchParams.set(name, String(data.get(name)));
+        history.replaceState(null, '', `${url.pathname}?${url.searchParams.toString()}`);
+      } catch (error) {
+        if (errorOut instanceof HTMLElement) { errorOut.hidden = false; errorOut.textContent = error instanceof Error ? error.message : 'Check your measurements and try again.'; }
+      }
+    };
+
+    form.addEventListener('submit', (event) => { event.preventDefault(); render(); });
+    form.querySelector('[data-reset]')?.addEventListener('click', () => { form.reset(); history.replaceState(null, '', window.location.pathname); render(); });
+
+    const params = new URLSearchParams(window.location.search);
+    for (const name of ['area', 'waste', 'rollCoverage', 'palletCoverage']) {
+      const input = form.elements.namedItem(name);
+      const value = params.get(name);
+      if (input instanceof HTMLInputElement && value !== null) input.value = value;
+    }
+    render();
+  }
+</script>
+
+<style>
+  [data-sod-form] h2 { margin-top: 0; }
+  .field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  label { display: grid; gap: .45rem; font-weight: 700; }
+  input { width: 100%; padding: .85rem .9rem; border: 1px solid var(--border); background: white; color: var(--text); font: inherit; }
+  .helper { color: var(--muted-text); font-size: .9rem; line-height: 1.6; }
+  .calc-actions { display: flex; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .notice { margin-top: 1rem; color: #8a2d22; }
+  .result-kicker { margin-top: 0; color: var(--muted-text); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; }
+  .result-primary { margin: .35rem 0 .8rem; font-size: clamp(3rem, 7vw, 5rem); line-height: .95; font-weight: 850; letter-spacing: -.05em; }
+  .result-list { list-style: none; padding: 0; margin: 1.5rem 0 0; border-top: 1px solid var(--border); }
+  .result-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .8rem 0; border-bottom: 1px solid var(--border); }
+  .example-block { max-width: 760px; padding-block: 4rem; }
+  .example-block h2 { margin: .3rem 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); }
+  .example-block p { line-height: 1.7; }
+  @media (max-width: 650px) { .field-grid { grid-template-columns: 1fr; } }
+</style>
