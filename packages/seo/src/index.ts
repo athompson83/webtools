@@ -73,7 +73,7 @@ export function buildRobotsTxt(input: RobotsPolicyInput): string {
   const sitemapPath = input.sitemapPath ?? '/sitemap.xml';
   const sitemapUrl = sameOriginUrl(origin.origin, sitemapPath, 'sitemap URL').toString();
   const generalDirective = input.allowSearchIndexing ? 'Allow: /' : 'Disallow: /';
-  const oaiDirective = input.allowOaiSearchBot ? 'Allow: /' : 'Disallow: /';
+  const oaiDirective = input.allowSearchIndexing && input.allowOaiSearchBot ? 'Allow: /' : 'Disallow: /';
   const gptDirective = input.allowGptBot ? 'Allow: /' : 'Disallow: /';
 
   return [
