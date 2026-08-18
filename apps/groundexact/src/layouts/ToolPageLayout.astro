@@ -1,0 +1,91 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface RelatedTool { href: string; name: string }
+interface Props {
+  title: string;
+  description: string;
+  pathname: string;
+  eyebrow?: string;
+  intro: string;
+  reviewedDate: string;
+  formulaSummary: string;
+  relatedTools?: RelatedTool[];
+}
+
+const {
+  title,
+  description,
+  pathname,
+  eyebrow = 'Outdoor project calculator',
+  intro,
+  reviewedDate,
+  formulaSummary,
+  relatedTools = [],
+} = Astro.props;
+---
+<BaseLayout title={title} description={description} pathname={pathname}>
+  <article class="tool-page container">
+    <header class="tool-heading">
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p class="lead">{intro}</p>
+      <p class="reviewed">Formula reviewed {reviewedDate}</p>
+    </header>
+
+    <section class="calculator-workspace" aria-label={`${title} workspace`}>
+      <div class="calculator-panel">
+        <slot name="calculator" />
+      </div>
+      <aside class="result-panel" aria-live="polite">
+        <slot name="results" />
+      </aside>
+    </section>
+
+    <section class="tool-copy">
+      <div>
+        <p class="eyebrow">How it works</p>
+        <h2>Understand the number before you buy.</h2>
+      </div>
+      <div class="prose">
+        <p>{formulaSummary}</p>
+        <slot name="methodology" />
+      </div>
+    </section>
+
+    <slot name="example" />
+    <slot name="faq" />
+
+    {relatedTools.length > 0 && (
+      <section class="related-tools" aria-labelledby="related-heading">
+        <p class="eyebrow">Keep planning</p>
+        <h2 id="related-heading">Related calculators</h2>
+        <div class="related-grid">
+          {relatedTools.map((tool) => <a href={tool.href}>{tool.name}<span aria-hidden="true"> →</span></a>)}
+        </div>
+      </section>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .tool-page { padding-block: clamp(2.5rem, 6vw, 5.5rem); }
+  .tool-heading { max-width: 760px; }
+  .tool-heading h1 { margin: .35rem 0 1rem; font-size: clamp(2.7rem, 7vw, 5.4rem); line-height: .96; letter-spacing: -.05em; }
+  .reviewed { color: var(--muted-text); font-size: .88rem; }
+  .calculator-workspace { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(300px, .92fr); margin-top: 2.5rem; border: 1px solid var(--border); background: var(--surface); box-shadow: 0 18px 50px rgb(24 49 38 / .07); }
+  .calculator-panel, .result-panel { padding: clamp(1.3rem, 3vw, 2.25rem); }
+  .result-panel { border-left: 1px solid var(--border); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+  .tool-copy { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2rem, 7vw, 7rem); padding-block: clamp(4rem, 8vw, 7rem); border-bottom: 1px solid var(--border); }
+  .tool-copy h2, .related-tools h2 { margin: .35rem 0 0; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.05; letter-spacing: -.035em; }
+  .prose { max-width: 68ch; }
+  .prose :global(p), .prose :global(li) { line-height: 1.75; }
+  .related-tools { padding-block: 4rem; }
+  .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; margin-top: 1.5rem; }
+  .related-grid a { padding: 1rem; border: 1px solid var(--border); background: var(--surface); text-decoration: none; color: var(--text); font-weight: 700; }
+  @media (max-width: 800px) {
+    .calculator-workspace, .tool-copy { grid-template-columns: 1fr; }
+    .result-panel { border-left: 0; border-top: 1px solid var(--border); }
+    .related-grid { grid-template-columns: 1fr; }
+  }
+</style>
