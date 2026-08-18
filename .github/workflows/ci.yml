@@ -22,6 +22,8 @@ jobs:
           cache: pnpm
       - name: Install
         run: pnpm install --frozen-lockfile=false
+      - name: Validate portfolio isolation
+        run: pnpm validate:portfolio
       - name: Lint
         run: pnpm lint
       - name: Typecheck
