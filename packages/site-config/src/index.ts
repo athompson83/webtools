@@ -87,6 +87,13 @@ export function validateSiteConfig(config: SiteConfig): SiteConfig {
 }
 
 export function absoluteUrl(config: SiteConfig, pathname = '/'): string {
-  const normalized = pathname.startsWith('/') ? pathname : `/${pathname}`;
-  return new URL(normalized, config.productionOrigin).toString();
+  const raw = pathname.trim();
+  if (raw.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(raw)) {
+    throw new RangeError('absolute URL path must remain on the configured origin.');
+  }
+  const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+  const base = new URL(config.productionOrigin);
+  const url = new URL(normalized, base);
+  if (url.origin !== base.origin) throw new RangeError('absolute URL path must remain on the configured origin.');
+  return url.toString();
 }
