@@ -16,6 +16,7 @@ interface Props {
   intro: string;
   reviewedDate: string;
   formulaSummary: string;
+  /** Deprecated: related links are registry-driven so page code cannot bypass live certification. */
   relatedTools?: RelatedTool[];
 }
 
@@ -27,7 +28,6 @@ const {
   intro,
   reviewedDate,
   formulaSummary,
-  relatedTools = [],
 } = Astro.props;
 
 const toolSlug = pathname.split('/').filter(Boolean).at(-1);
@@ -42,10 +42,9 @@ const structuredData = [
   ]),
 ];
 
-const automaticRelatedTools: RelatedTool[] = toolSlug
+const displayedRelatedTools: RelatedTool[] = toolSlug
   ? relatedLiveTools(tools, toolSlug).map((tool) => ({ href: toolPath(tool.slug), name: tool.name }))
   : [];
-const displayedRelatedTools = relatedTools.length > 0 ? relatedTools : automaticRelatedTools;
 ---
 <BaseLayout title={title} description={description} pathname={pathname} noindex={noindex} structuredData={structuredData}>
   <article class="tool-page container">
