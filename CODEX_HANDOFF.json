@@ -34,12 +34,12 @@
   "current_state": {
     "page_ready_tools": [
       "mulch-calculator",
+      "gravel-calculator",
+      "topsoil-calculator",
       "fertilizer-calculator",
       "cubic-yard-calculator"
     ],
     "engine_ready_tools": [
-      "gravel-calculator",
-      "topsoil-calculator",
       "sod-calculator",
       "paver-calculator",
       "retaining-wall-calculator",
@@ -50,9 +50,12 @@
       "@webtools/calculator-core",
       "@webtools/site-config",
       "@webtools/analytics",
-      "@webtools/seo"
+      "@webtools/seo",
+      "@webtools/monetization"
     ],
     "informational_and_legal_pages": "implemented through the typed static page registry and root dynamic route",
+    "crawler_policy": "GroundExact robots.txt is generated from site.config.ts through @webtools/seo rather than hard-coded in public/",
+    "future_site_scaffold": "apps/_site-template contains non-buildable .example files for site config, package config, Astro config, and robots generation",
     "important_integrity_note": "No calculator should be promoted to live until Codex has actually run the publication/build/browser gates. This handoff intentionally makes zero claims that current remote commits compile or pass tests because the authoring environment could not obtain a local GitHub clone."
   },
   "first_action": {
@@ -76,6 +79,7 @@
         "Make workspace install deterministic.",
         "Make lint, typecheck, tests, and build green across every workspace.",
         "Confirm Astro build produces only intended static routes.",
+        "Confirm config-driven robots output matches groundexact.com and the crawler policy.",
         "Confirm no unfinished tool URL is represented as a certified live SEO page.",
         "Promote page-ready status only after the tool-specific publication gates also pass."
       ]
@@ -85,10 +89,11 @@
       "name": "Calculation integrity",
       "requirements": [
         "Run every calculator golden-case test.",
-        "Add negative/validation cases for every engine.",
+        "Add negative/validation cases for every engine that still lacks them.",
         "Refactor the existing Mulch page so its browser UI imports/calls the production calculateMulch module instead of duplicating the formula inline.",
         "Do not duplicate formulas in new page scripts; browser UI must call/import the production calculation module.",
-        "Verify supplier-specific values remain explicit inputs."
+        "Verify supplier-specific values remain explicit inputs.",
+        "Review retaining-wall and fence scope labels so users understand which geometric conditions the MVP does and does not model."
       ]
     },
     {
@@ -96,8 +101,8 @@
       "name": "Reusable calculator UI",
       "requirements": [
         "Use ToolPageLayout.astro as the common composition boundary unless a better tested abstraction is demonstrably needed.",
-        "Cubic Yard and Fertilizer are the first two page patterns built on the shared layout; inspect them before extracting more UI primitives.",
-        "Extract reusable field/result components only after the existing patterns prove the abstraction.",
+        "Inspect Cubic Yard, Fertilizer, Topsoil, and Gravel before extracting additional UI primitives; they represent distinct input/result patterns.",
+        "Extract reusable field/result/share/print components only where duplication is now proven.",
         "Preserve the north-star flow: Measure -> Calculate -> Adjust -> Buy.",
         "Implement shareable state using query parameters while canonicalizing to the clean URL.",
         "Add reset, print, and copy/share behavior in a reusable way."
@@ -107,8 +112,6 @@
       "phase": 4,
       "name": "Finish GroundExact calculator pages",
       "tool_order": [
-        "topsoil-calculator",
-        "gravel-calculator",
         "sod-calculator",
         "grass-seed-calculator",
         "paver-calculator",
@@ -136,7 +139,8 @@
       "phase": 6,
       "name": "Monetization readiness",
       "requirements": [
-        "Create provider-neutral ad slot components with reserved dimensions.",
+        "Use @webtools/monetization as the provider-neutral decision boundary for ad/affiliate behavior.",
+        "Create visual ad slot components with reserved dimensions only after the provider-neutral rules are green.",
         "Do not enable ads by default until IDs, consent, and policy requirements are configured.",
         "Ads must never interrupt input-to-result comprehension or masquerade as controls.",
         "Create affiliate-link disclosure helpers if affiliate links are introduced."
@@ -181,6 +185,7 @@
     "No broken internal links.",
     "No unfinished URLs are represented as certified indexable content.",
     "Canonical origin is groundexact.com throughout built output.",
+    "Robots output and sitemap origin derive correctly from GroundExact configuration.",
     "OAI-SearchBot policy is correct and explicit.",
     "Performance and accessibility checks do not reveal material blockers.",
     "Ads remain disabled until the owner provides/configures monetization details.",
