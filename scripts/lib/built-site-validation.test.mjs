@@ -16,8 +16,8 @@ function makeFixture() {
   }));
   const dist = path.join(root, 'apps', 'groundexact', 'dist');
   fs.mkdirSync(path.join(dist, 'about'), { recursive: true });
-  fs.writeFileSync(path.join(dist, 'index.html'), '<link rel="canonical" href="https://groundexact.com/"><meta name="robots" content="index,follow">');
-  fs.writeFileSync(path.join(dist, 'about', 'index.html'), '<link rel="canonical" href="https://groundexact.com/about"><meta name="robots" content="index,follow">');
+  fs.writeFileSync(path.join(dist, 'index.html'), '<link rel="canonical" href="https://groundexact.com/"><meta name="robots" content="index,follow"><a href="/about">About</a>');
+  fs.writeFileSync(path.join(dist, 'about', 'index.html'), '<link rel="canonical" href="https://groundexact.com/about"><meta name="robots" content="index,follow"><a href="/">Home</a>');
   fs.writeFileSync(path.join(dist, 'robots.txt'), 'Sitemap: https://groundexact.com/sitemap.xml\n');
   fs.writeFileSync(path.join(dist, 'sitemap.xml'), '<urlset><url><loc>https://groundexact.com/</loc></url></urlset>');
   return root;
@@ -61,6 +61,26 @@ test('rejects a noindex page that appears in the sitemap', () => {
     fs.writeFileSync(path.join(previewDir, 'index.html'), '<link rel="canonical" href="https://groundexact.com/tools/preview"><meta name="robots" content="noindex,follow">');
     fs.writeFileSync(path.join(root, 'apps', 'groundexact', 'dist', 'sitemap.xml'), '<urlset><url><loc>https://groundexact.com/</loc></url><url><loc>https://groundexact.com/tools/preview</loc></url></urlset>');
     assert.throws(() => validateBuiltSite(root, 'groundexact'), /noindex page appears in sitemap/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects a broken same-origin internal link', () => {
+  const root = makeFixture();
+  try {
+    fs.appendFileSync(path.join(root, 'apps', 'groundexact', 'dist', 'index.html'), '<a href="/missing-page">Missing</a>');
+    assert.throws(() => validateBuiltSite(root, 'groundexact'), /broken internal link/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects built HTML without exactly one canonical URL', () => {
+  const root = makeFixture();
+  try {
+    fs.writeFileSync(path.join(root, 'apps', 'groundexact', 'dist', 'about', 'index.html'), '<meta name="robots" content="index,follow"><a href="/">Home</a>');
+    assert.throws(() => validateBuiltSite(root, 'groundexact'), /exactly one canonical/i);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
