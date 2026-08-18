@@ -3,9 +3,9 @@ import { assertToolStatusTransition, relatedLiveTools, toolPath, validateToolDef
 
 describe('tool catalog', () => {
   const tools = validateToolDefinitions([
-    { slug: 'mulch-calculator', name: 'Mulch Calculator', description: 'Mulch.', status: 'live', category: 'materials' },
-    { slug: 'gravel-calculator', name: 'Gravel Calculator', description: 'Gravel.', status: 'live', category: 'materials' },
-    { slug: 'sod-calculator', name: 'Sod Calculator', description: 'Sod.', status: 'page-ready', category: 'coverage' },
+    { slug: 'mulch-calculator', name: 'Mulch Calculator', description: 'Mulch.', status: 'live', category: 'materials', reviewedOn: '2026-08-18' },
+    { slug: 'gravel-calculator', name: 'Gravel Calculator', description: 'Gravel.', status: 'live', category: 'materials', reviewedOn: '2026-08-18' },
+    { slug: 'sod-calculator', name: 'Sod Calculator', description: 'Sod.', status: 'page-ready', category: 'coverage', reviewedOn: '2026-08-18' },
   ]);
 
   it('builds the canonical tool path from a slug', () => {
@@ -27,6 +27,25 @@ describe('tool catalog', () => {
     expect(() => validateToolDefinitions([
       { slug: '../escape', name: 'Bad', description: 'Bad', status: 'planned', category: 'a' },
     ])).toThrow(/tool slug/i);
+  });
+
+  it('requires a valid ISO review date before a tool can be page-ready or live', () => {
+    expect(() => validateToolDefinitions([
+      { slug: 'missing-review', name: 'Missing Review', description: 'Missing.', status: 'page-ready', category: 'a' },
+    ])).toThrow(/reviewedOn/i);
+    expect(() => validateToolDefinitions([
+      { slug: 'bad-review', name: 'Bad Review', description: 'Bad.', status: 'live', category: 'a', reviewedOn: '08/18/2026' },
+    ])).toThrow(/reviewedOn/i);
+    expect(() => validateToolDefinitions([
+      { slug: 'bad-calendar-date', name: 'Bad Calendar Date', description: 'Bad.', status: 'live', category: 'a', reviewedOn: '2026-02-31' },
+    ])).toThrow(/reviewedOn/i);
+  });
+
+  it('allows planned and engine-ready tools to omit a review date', () => {
+    expect(() => validateToolDefinitions([
+      { slug: 'future-tool', name: 'Future Tool', description: 'Future.', status: 'planned', category: 'a' },
+      { slug: 'engine-tool', name: 'Engine Tool', description: 'Engine.', status: 'engine-ready', category: 'a' },
+    ])).not.toThrow();
   });
 
   it('allows one-step forward promotions and emergency demotions', () => {
