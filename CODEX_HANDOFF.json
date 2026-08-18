@@ -1,10 +1,12 @@
 {
-  "role": "You are the implementation agent responsible for preparing and completing the WebTools monorepo without changing the approved portfolio architecture unless a verified defect requires it.",
+  "role": "You are the implementation agent responsible for certifying and completing the WebTools monorepo without changing the approved portfolio architecture unless a verified defect requires it.",
   "repository": "https://github.com/athompson83/webtools",
   "owner_goal": "Build a portfolio of independent, high-quality utility websites that share engineering infrastructure while each uses its own domain, brand, SEO configuration, analytics, advertising configuration, and legal disclosures. GroundExact is the first site.",
   "required_reading_order": [
     "AGENTS.md",
     "README.md",
+    "CODEX_HANDOFF.json",
+    "docs/implementation/codex-readiness.md",
     "docs/architecture/monorepo.md",
     "docs/architecture/multi-domain-deployment.md",
     "docs/product/groundexact-prd.md",
@@ -17,6 +19,7 @@
     "model": "multi-site monorepo",
     "site_boundary": "one independent app under apps/<site-key> per public brand/domain",
     "shared_code_boundary": "packages/* contains reusable infrastructure that is brand-neutral",
+    "portfolio_manifest": "portfolio/sites.json is the registry for site keys, app directories, packages, and production origins",
     "groundexact_domain": "https://groundexact.com",
     "mvp_backend": "none unless a concrete requirement proves otherwise",
     "mvp_database": "none",
@@ -36,139 +39,119 @@
       "mulch-calculator",
       "gravel-calculator",
       "topsoil-calculator",
-      "fertilizer-calculator",
-      "cubic-yard-calculator"
-    ],
-    "engine_ready_tools": [
       "sod-calculator",
       "paver-calculator",
       "retaining-wall-calculator",
       "fence-calculator",
-      "grass-seed-calculator"
+      "fertilizer-calculator",
+      "grass-seed-calculator",
+      "cubic-yard-calculator"
     ],
+    "engine_ready_tools": [],
     "shared_packages_present": [
       "@webtools/calculator-core",
       "@webtools/site-config",
+      "@webtools/tool-runtime",
       "@webtools/analytics",
+      "@webtools/compliance",
       "@webtools/seo",
       "@webtools/monetization"
     ],
+    "portfolio_automation": [
+      "pnpm create:site -- --key <key> --name \"Site Name\" --domain https://example.com --contact-email hello@example.com",
+      "pnpm validate:portfolio",
+      "pnpm validate:dist"
+    ],
     "informational_and_legal_pages": "implemented through the typed static page registry and root dynamic route",
-    "crawler_policy": "GroundExact robots.txt is generated from site.config.ts through @webtools/seo rather than hard-coded in public/",
-    "future_site_scaffold": "apps/_site-template contains non-buildable .example files for site config, package config, Astro config, and robots generation",
-    "important_integrity_note": "No calculator should be promoted to live until Codex has actually run the publication/build/browser gates. This handoff intentionally makes zero claims that current remote commits compile or pass tests because the authoring environment could not obtain a local GitHub clone."
+    "publication_safety": "ToolPageLayout automatically noindexes every calculator that is not registry status live; sitemap.xml is generated only from liveTools plus approved static routes",
+    "crawler_policy": "robots.txt is generated from site.config.ts through @webtools/seo and points at the registry-driven sitemap.xml",
+    "structured_data": "BaseLayout emits Organization and WebSite schemas; ToolPageLayout emits WebPage and BreadcrumbList schemas",
+    "tool_actions": "ToolPageLayout provides copy-link and print actions for all calculator pages",
+    "monetization_state": "provider-neutral ad slot code exists but GroundExact ads remain disabled in site.config.ts and no provider script is injected",
+    "runtime_data_inventory": "apps/groundexact/src/config/runtime-data.ts records server storage, uploads, analytics provider, advertising provider, affiliate tracking, and functional storage behavior",
+    "important_integrity_note": "No calculator is certified live yet. This handoff intentionally makes zero claims that the current remote commits compile or pass tests because the authoring environment could not obtain a local GitHub clone."
   },
   "first_action": {
-    "instruction": "Establish a verified green local baseline before adding features.",
+    "instruction": "Establish a verified green local baseline before feature expansion or status promotion.",
     "commands": [
       "corepack enable",
-      "pnpm install --frozen-lockfile",
+      "pnpm install",
+      "pnpm validate:portfolio",
       "pnpm lint",
       "pnpm typecheck",
       "pnpm test",
-      "pnpm build"
+      "pnpm build",
+      "pnpm validate:dist"
     ],
-    "fallback_if_no_lockfile_or_frozen_install_is_not_possible": "Do not bypass silently. Inspect package-manager state, generate or repair the lockfile intentionally, then repeat the full gate and document why.",
-    "required_report": "Report exact command results and any pre-existing failures before feature work. Fix repository scaffolding defects first."
+    "lockfile_requirement": "If pnpm-lock.yaml is absent, generate it intentionally during the first verified install, commit it, then switch CI/install guidance to frozen-lockfile behavior and repeat all gates.",
+    "required_report": "Report exact command results and any pre-existing failures before additional feature work. Fix repository scaffolding defects first."
   },
   "implementation_order": [
     {
       "phase": 1,
       "name": "Repository certification",
       "requirements": [
-        "Make workspace install deterministic.",
-        "Make lint, typecheck, tests, and build green across every workspace.",
-        "Confirm Astro build produces only intended static routes.",
-        "Confirm config-driven robots output matches groundexact.com and the crawler policy.",
-        "Confirm no unfinished tool URL is represented as a certified live SEO page.",
-        "Promote page-ready status only after the tool-specific publication gates also pass."
+        "Create or repair deterministic pnpm lockfile state.",
+        "Make portfolio validation, lint, typecheck, tests, build, and built-output validation green across every workspace.",
+        "Confirm Astro build produces intended static routes and generated robots.txt/sitemap.xml.",
+        "Confirm no page-ready tool is present in sitemap.xml and every page-ready tool emits noindex,follow.",
+        "Confirm built HTML contains no foreign portfolio production origin."
       ]
     },
     {
       "phase": 2,
-      "name": "Calculation integrity",
+      "name": "Calculation and runtime integrity",
       "requirements": [
-        "Run every calculator golden-case test.",
-        "Add negative/validation cases for every engine that still lacks them.",
-        "Refactor the existing Mulch page so its browser UI imports/calls the production calculateMulch module instead of duplicating the formula inline.",
-        "Do not duplicate formulas in new page scripts; browser UI must call/import the production calculation module.",
-        "Verify supplier-specific values remain explicit inputs.",
-        "Review retaining-wall and fence scope labels so users understand which geometric conditions the MVP does and does not model."
+        "Run every calculator golden and invalid-input test.",
+        "Add missing edge cases discovered by execution rather than speculative rewrites.",
+        "Confirm every browser page imports/calls its production calculate module; Mulch and Fence already demonstrate the preferred @webtools/tool-runtime pattern.",
+        "Refactor other pages onto @webtools/tool-runtime only when behavior remains unchanged and tests/build stay green.",
+        "Verify supplier-specific values remain explicit inputs."
       ]
     },
     {
       "phase": 3,
-      "name": "Reusable calculator UI",
+      "name": "Browser certification",
       "requirements": [
-        "Use ToolPageLayout.astro as the common composition boundary unless a better tested abstraction is demonstrably needed.",
-        "Inspect Cubic Yard, Fertilizer, Topsoil, and Gravel before extracting additional UI primitives; they represent distinct input/result patterns.",
-        "Extract reusable field/result/share/print components only where duplication is now proven.",
-        "Preserve the north-star flow: Measure -> Calculate -> Adjust -> Buy.",
-        "Implement shareable state using query parameters while canonicalizing to the clean URL.",
-        "Add reset, print, and copy/share behavior in a reusable way."
+        "Visually verify all ten calculator pages at 360, 390, 768, 1024, and 1440 pixel widths.",
+        "Check keyboard flow, form labels, invalid-input messages, aria-live result updates, copy-link behavior, print behavior, query-state hydration/reset, and no horizontal overflow.",
+        "Confirm retaining-wall and fence pages do not imply engineering or structural adequacy."
       ]
     },
     {
       "phase": 4,
-      "name": "Finish GroundExact calculator pages",
-      "tool_order": [
-        "sod-calculator",
-        "grass-seed-calculator",
-        "paver-calculator",
-        "retaining-wall-calculator",
-        "fence-calculator"
-      ],
+      "name": "SEO/publication certification",
       "requirements": [
-        "Each page needs working UI, visible methodology, a verified worked example, reviewed date, assumptions, and only genuinely related certified-live-tool links.",
-        "Only change registry status to live after the publication gate in docs/seo/groundexact-page-map.md passes."
+        "Validate titles, descriptions, canonicals, WebSite/Organization/WebPage/Breadcrumb schemas, robots, and sitemap output.",
+        "Promote calculators from page-ready to live only after their individual publication gate passes.",
+        "Verify newly live tools then appear in sitemap.xml and automatic related-tool links without manual duplicate allowlists.",
+        "Keep OAI-SearchBot allowed unless the owner changes that decision and keep GPTBot separately configurable."
       ]
     },
     {
       "phase": 5,
-      "name": "SEO and discovery",
+      "name": "Analytics, consent, and monetization readiness",
       "requirements": [
-        "Use @webtools/seo helpers for canonical and structured-data consistency.",
-        "Add WebSite, Organization, BreadcrumbList, and truthful WebPage schema where appropriate.",
-        "Keep OAI-SearchBot allowed unless the owner changes that decision.",
-        "Keep GPTBot separately configurable.",
-        "Verify sitemap contains only intended canonical URLs at release time.",
-        "Prepare IndexNow and webmaster/search-console documentation without introducing unnecessary server infrastructure."
+        "Use @webtools/compliance as the runtime behavior/consent decision contract.",
+        "Use @webtools/analytics rather than direct vendor calls from calculators.",
+        "Use @webtools/monetization and the GroundExact AdSlot component as the provider-neutral ad boundary.",
+        "Do not enable ads or optional tracking until real provider IDs, consent behavior, and matching legal disclosures are configured.",
+        "Never place ad controls where they can be mistaken for calculator controls or download/result actions."
       ]
     },
     {
       "phase": 6,
-      "name": "Monetization readiness",
+      "name": "Future site factory certification",
       "requirements": [
-        "Use @webtools/monetization as the provider-neutral decision boundary for ad/affiliate behavior.",
-        "Create visual ad slot components with reserved dimensions only after the provider-neutral rules are green.",
-        "Do not enable ads by default until IDs, consent, and policy requirements are configured.",
-        "Ads must never interrupt input-to-result comprehension or masquerade as controls.",
-        "Create affiliate-link disclosure helpers if affiliate links are introduced."
-      ]
-    },
-    {
-      "phase": 7,
-      "name": "Analytics and consent readiness",
-      "requirements": [
-        "Use the typed analytics event contract rather than direct vendor calls from calculator code.",
-        "Implement a thin provider adapter only when a provider is selected.",
-        "Ensure consent requirements gate optional tracking in applicable jurisdictions.",
-        "Do not make legal-page claims that contradict actual runtime behavior."
-      ]
-    },
-    {
-      "phase": 8,
-      "name": "Release certification",
-      "requirements": [
-        "Run lint, typecheck, unit tests, build, and browser-based responsive verification.",
-        "Test 360, 390, 768, 1024, and 1440 pixel widths.",
-        "Verify keyboard flow, focus states, invalid-input behavior, aria-live results, print behavior, canonical URLs, robots, sitemap, and no horizontal overflow.",
-        "Perform a production-origin leak check for any future site IDs/domains before each deployment."
+        "Run the new-site scaffold in a disposable branch or temp copy and verify it creates an isolated Astro app with indexing disabled by default.",
+        "Verify portfolio manifest validation catches duplicate keys/domains/package identities.",
+        "Verify post-build validation catches foreign origins and canonical leaks.",
+        "Use pnpm create:site for subsequent properties instead of copying GroundExact wholesale."
       ]
     }
   ],
   "coding_rules": [
-    "Use test-driven development for behavioral changes.",
+    "Use test-driven development for behavioral changes when execution is available.",
     "Prefer small focused modules with explicit interfaces.",
     "Do not introduce React or another UI framework merely for calculator interactivity; Astro plus small client scripts is sufficient unless evidence proves otherwise.",
     "Do not add a database, auth, CMS, queues, or server API speculatively.",
@@ -176,28 +159,33 @@
     "Do not invent sources, statistics, testimonials, review counts, user counts, or prices.",
     "Do not mark unfinished or unverified pages live to make the homepage appear complete.",
     "Do not merge formula logic into page markup when a calculator module exists.",
-    "Keep each site's domain and provider IDs isolated."
+    "Keep each site's domain and provider IDs isolated.",
+    "Do not bypass portfolio or built-output validation to make CI green."
   ],
   "definition_of_done_for_groundexact_mvp": [
     "All ten calculator pages are certified live and pass their publication gates.",
-    "All calculator engines have positive and invalid-input tests.",
+    "All calculator engines pass positive and invalid-input tests.",
     "All root informational/legal pages render and match configured runtime behavior.",
     "No broken internal links.",
-    "No unfinished URLs are represented as certified indexable content.",
+    "No page-ready or planned calculator URLs appear in sitemap.xml.",
     "Canonical origin is groundexact.com throughout built output.",
     "Robots output and sitemap origin derive correctly from GroundExact configuration.",
     "OAI-SearchBot policy is correct and explicit.",
     "Performance and accessibility checks do not reveal material blockers.",
-    "Ads remain disabled until the owner provides/configures monetization details.",
+    "Ads remain disabled until provider and consent configuration are deliberately supplied.",
+    "Portfolio source validation and post-build domain validation pass.",
     "Full repository gates are green at the final commit."
   ],
   "owner_reporting_format": {
     "after_each_phase": [
+      "Exact head SHA",
       "What changed",
       "Files/areas affected",
-      "Tests/gates run and exact result",
-      "Any assumption or risk found",
-      "What is next"
+      "Commands executed and exact results",
+      "Routes visually checked",
+      "Any status promotions",
+      "Known limitation or risk",
+      "Next recommended action"
     ],
     "stop_conditions": [
       "A required product decision conflicts with existing approved documentation.",
