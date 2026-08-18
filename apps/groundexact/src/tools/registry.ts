@@ -1,14 +1,16 @@
-export type ToolStatus = 'live' | 'page-ready' | 'engine-ready' | 'planned';
+import {
+  engineReadyTools as selectEngineReadyTools,
+  liveTools as selectLiveTools,
+  pageReadyTools as selectPageReadyTools,
+  validateToolDefinitions,
+  type ToolDefinition,
+} from '@webtools/tool-catalog';
 
-export interface ToolSummary {
-  slug: string;
-  name: string;
-  description: string;
-  status: ToolStatus;
-  category: 'materials' | 'coverage' | 'structure';
-}
+export type { ToolStatus } from '@webtools/tool-catalog';
+export type GroundExactToolCategory = 'materials' | 'coverage' | 'structure';
+export type ToolSummary = ToolDefinition<GroundExactToolCategory>;
 
-export const tools: ToolSummary[] = [
+export const tools: ToolSummary[] = validateToolDefinitions([
   { slug: 'mulch-calculator', name: 'Mulch Calculator', description: 'Estimate cubic yards, waste-adjusted order quantity, and bag equivalents.', status: 'page-ready', category: 'materials' },
   { slug: 'gravel-calculator', name: 'Gravel & Stone Calculator', description: 'Estimate volume, weight, waste, and order quantity for aggregate projects.', status: 'page-ready', category: 'materials' },
   { slug: 'topsoil-calculator', name: 'Topsoil Calculator', description: 'Estimate topsoil volume for beds, lawn leveling, and fill projects.', status: 'page-ready', category: 'materials' },
@@ -19,8 +21,8 @@ export const tools: ToolSummary[] = [
   { slug: 'fertilizer-calculator', name: 'Fertilizer Coverage Calculator', description: 'Use the product label rate to estimate how much fertilizer to buy.', status: 'page-ready', category: 'coverage' },
   { slug: 'grass-seed-calculator', name: 'Grass Seed Calculator', description: 'Use your seed label rate and lawn area to estimate purchase quantity.', status: 'page-ready', category: 'coverage' },
   { slug: 'cubic-yard-calculator', name: 'Cubic Yard Calculator', description: 'Convert project dimensions and depth into cubic yards and cubic feet.', status: 'page-ready', category: 'materials' },
-];
+]);
 
-export const liveTools = tools.filter((tool) => tool.status === 'live');
-export const pageReadyTools = tools.filter((tool) => tool.status === 'page-ready');
-export const engineReadyTools = tools.filter((tool) => tool.status === 'engine-ready');
+export const liveTools = selectLiveTools(tools);
+export const pageReadyTools = selectPageReadyTools(tools);
+export const engineReadyTools = selectEngineReadyTools(tools);
