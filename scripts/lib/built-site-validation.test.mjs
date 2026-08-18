@@ -16,8 +16,8 @@ function makeFixture() {
   }));
   const dist = path.join(root, 'apps', 'groundexact', 'dist');
   fs.mkdirSync(path.join(dist, 'about'), { recursive: true });
-  fs.writeFileSync(path.join(dist, 'index.html'), '<link rel="canonical" href="https://groundexact.com/">');
-  fs.writeFileSync(path.join(dist, 'about', 'index.html'), '<link rel="canonical" href="https://groundexact.com/about">');
+  fs.writeFileSync(path.join(dist, 'index.html'), '<link rel="canonical" href="https://groundexact.com/"><meta name="robots" content="index,follow">');
+  fs.writeFileSync(path.join(dist, 'about', 'index.html'), '<link rel="canonical" href="https://groundexact.com/about"><meta name="robots" content="index,follow">');
   fs.writeFileSync(path.join(dist, 'robots.txt'), 'Sitemap: https://groundexact.com/sitemap.xml\n');
   fs.writeFileSync(path.join(dist, 'sitemap.xml'), '<urlset><url><loc>https://groundexact.com/</loc></url></urlset>');
   return root;
@@ -48,6 +48,19 @@ test('rejects a sitemap containing a foreign origin', () => {
   try {
     fs.writeFileSync(path.join(root, 'apps', 'groundexact', 'dist', 'sitemap.xml'), '<urlset><url><loc>https://other.com/page</loc></url></urlset>');
     assert.throws(() => validateBuiltSite(root, 'groundexact'), /sitemap contains foreign origin/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('rejects a noindex page that appears in the sitemap', () => {
+  const root = makeFixture();
+  try {
+    const previewDir = path.join(root, 'apps', 'groundexact', 'dist', 'tools', 'preview');
+    fs.mkdirSync(previewDir, { recursive: true });
+    fs.writeFileSync(path.join(previewDir, 'index.html'), '<link rel="canonical" href="https://groundexact.com/tools/preview"><meta name="robots" content="noindex,follow">');
+    fs.writeFileSync(path.join(root, 'apps', 'groundexact', 'dist', 'sitemap.xml'), '<urlset><url><loc>https://groundexact.com/</loc></url><url><loc>https://groundexact.com/tools/preview</loc></url></urlset>');
+    assert.throws(() => validateBuiltSite(root, 'groundexact'), /noindex page appears in sitemap/i);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
