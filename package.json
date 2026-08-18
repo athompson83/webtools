@@ -6,11 +6,12 @@
   "scripts": {
     "dev:groundexact": "pnpm --filter @webtools/groundexact dev",
     "build": "pnpm -r build",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && node --test scripts/lib/*.test.mjs",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
+    "validate:portfolio": "node scripts/validate-portfolio.mjs",
     "format": "prettier --write .",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    "check": "pnpm validate:portfolio && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
