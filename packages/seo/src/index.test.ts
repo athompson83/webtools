@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildBreadcrumbSchema, buildCanonicalUrl, buildToolWebPageSchema } from './index';
+import { buildBreadcrumbSchema, buildCanonicalUrl, buildRobotsTxt, buildToolWebPageSchema } from './index';
 
 describe('SEO helpers', () => {
   it('builds canonical URLs without preserving query strings', () => {
@@ -24,5 +24,17 @@ describe('SEO helpers', () => {
     });
     expect(schema['@type']).toBe('WebPage');
     expect(schema.dateModified).toBe('2026-08-18');
+  });
+
+  it('builds explicit search and OpenAI crawler policy with the correct sitemap origin', () => {
+    const robots = buildRobotsTxt({
+      origin: 'https://groundexact.com',
+      allowSearchIndexing: true,
+      allowOaiSearchBot: true,
+      allowGptBot: false,
+    });
+    expect(robots).toContain('User-agent: OAI-SearchBot\nAllow: /');
+    expect(robots).toContain('User-agent: GPTBot\nDisallow: /');
+    expect(robots).toContain('Sitemap: https://groundexact.com/sitemap-index.xml');
   });
 });
