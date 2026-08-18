@@ -12,7 +12,7 @@
     "create:site": "node scripts/create-site.mjs",
     "build": "pnpm -r build",
     "test": "pnpm -r test && node --test scripts/lib/*.test.mjs",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm -r lint && eslint scripts --max-warnings=0",
     "typecheck": "pnpm -r typecheck",
     "validate:portfolio": "node scripts/validate-portfolio.mjs",
     "validate:dist": "node scripts/validate-dist.mjs",
