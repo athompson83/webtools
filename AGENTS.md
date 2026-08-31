@@ -108,6 +108,21 @@ MVP calculators:
 
 Do not expand MVP into contractor CRM, accounts, saved projects, ecommerce, supplier APIs, AI chat, or live pricing unless explicitly requested.
 
+<!-- BEGIN ECONOMICAL CI -->
+## Economical CI (Codex and Claude)
+
+These rules apply equally to Codex and Claude.
+
+- Inspect changed files before testing. Run focused package/app checks first and run the full `pnpm check` gate when application code, shared packages, scripts, configuration, dependencies, generated output, or deployment behavior changed.
+- Documentation-only changes do not require installing dependencies or rebuilding every site. Review the rendered/diffed Markdown and run only an applicable documentation or formatting check.
+- Record exact local commands and results in the pull request or handoff. Do not push speculative fixes solely to obtain GitHub Actions feedback.
+- Read complete failing job and step logs, compare the failure with recent commits and a working repository pattern, and identify the root cause before changing code or workflow configuration.
+- Classify failures as deterministic code/configuration, base-branch drift/conflict, flaky/transient, dependency/service outage, secret/permission boundary, or obsolete workflow.
+- Do not manually rerun failed Actions or create empty commits to retrigger CI before the root cause is known. Allow at most one targeted rerun when evidence specifically indicates a transient external failure.
+- Use a draft pull request while iterating; mark it ready only after selected local checks pass so hosted runners are not consumed on each work-in-progress push.
+- Preserve portfolio validation, lint, typecheck, tests, builds, distribution validation, legal/data-inventory checks, and independent-deployment assurance whenever their risk boundary changed. Cost reduction must not weaken those gates.
+<!-- END ECONOMICAL CI -->
+
 ## Required verification before claiming completion
 
 At minimum run and report exact results for:
