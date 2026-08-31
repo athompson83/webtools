@@ -38,7 +38,11 @@ jobs:
           # Triple-dot isolates changes introduced by the PR. Disabling rename
           # detection reports both sides of a move so executable or config
           # changes cannot disappear behind a documentation destination.
-          mapfile -t changed_files < <(git diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA")
+          if ! changed_output=$(git diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA"); then
+            echo "Unable to classify pull-request changes; refusing to skip validation." >&2
+            exit 1
+          fi
+          mapfile -t changed_files <<< "$changed_output"
           run_full=false
           for path in "${changed_files[@]}"; do
             case "$path" in
