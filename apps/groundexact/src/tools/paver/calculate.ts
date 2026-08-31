@@ -23,9 +23,11 @@ export function calculatePavers(input: PaverInput): PaverResult {
   assertPositive(input.paverWidthInches, 'paver width');
   const { adjusted: adjustedAreaSqFt } = applyWaste(input.areaSqFt, input.wastePercent);
   const singlePaverAreaSqFt = (input.paverLengthInches * input.paverWidthInches) / 144;
+  const rawPaverCount = adjustedAreaSqFt / singlePaverAreaSqFt;
+  const roundingTolerance = Number.EPSILON * Math.max(1, Math.abs(rawPaverCount));
   return {
     adjustedAreaSqFt,
     singlePaverAreaSqFt,
-    paversNeeded: Math.ceil(adjustedAreaSqFt / singlePaverAreaSqFt),
+    paversNeeded: Math.ceil(rawPaverCount - roundingTolerance),
   };
 }
