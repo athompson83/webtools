@@ -2,34 +2,81 @@ name: CI
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: webtools-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: changes
+        name: Select required checks
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
+            echo "run-full=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          mapfile -t changed_files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          run_full=false
+          for path in "${changed_files[@]}"; do
+            case "$path" in
+              *.md|docs/*|LICENSE|.github/ISSUE_TEMPLATE/*|.github/PULL_REQUEST_TEMPLATE.md)
+                ;;
+              *)
+                run_full=true
+                ;;
+            esac
+          done
+          echo "run-full=$run_full" >> "$GITHUB_OUTPUT"
+      - if: steps.changes.outputs.run-full != 'true'
+        run: echo "Documentation-only change; portfolio build verification is not required."
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        if: steps.changes.outputs.run-full == 'true'
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
         with:
           version: 10.14.0
       - name: Setup Node
-        uses: actions/setup-node@v4
+        if: steps.changes.outputs.run-full == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
       - name: Install
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm install --frozen-lockfile=false
       - name: Validate portfolio
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm validate:portfolio
       - name: Lint
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm lint
       - name: Typecheck
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm typecheck
       - name: Test
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm test
       - name: Build
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm build
       - name: Validate dist
+        if: steps.changes.outputs.run-full == 'true'
         run: pnpm validate:dist
