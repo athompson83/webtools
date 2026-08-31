@@ -35,7 +35,10 @@ jobs:
             exit 0
           fi
 
-          mapfile -t changed_files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          # Triple-dot isolates changes introduced by the PR. Disabling rename
+          # detection reports both sides of a move so executable or config
+          # changes cannot disappear behind a documentation destination.
+          mapfile -t changed_files < <(git diff --name-only --no-renames "$BASE_SHA...$HEAD_SHA")
           run_full=false
           for path in "${changed_files[@]}"; do
             case "$path" in
