@@ -6,9 +6,17 @@ export interface ToolDefinition<Category extends string = string> {
   description: string;
   status: ToolStatus;
   category: Category;
+  reviewedOn?: string;
 }
 
 const forwardLifecycle: ToolStatus[] = ['planned', 'engine-ready', 'page-ready', 'live'];
+const publishableStatuses = new Set<ToolStatus>(['page-ready', 'live']);
+
+function isIsoCalendarDate(value: string | undefined): value is string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+}
 
 export function validateToolDefinitions<T extends ToolDefinition>(tools: readonly T[]): T[] {
   const seen = new Set<string>();
@@ -17,6 +25,9 @@ export function validateToolDefinitions<T extends ToolDefinition>(tools: readonl
     if (!tool.name.trim()) throw new RangeError(`tool name is required for ${tool.slug}`);
     if (!tool.description.trim()) throw new RangeError(`tool description is required for ${tool.slug}`);
     if (!tool.category.trim()) throw new RangeError(`tool category is required for ${tool.slug}`);
+    if (publishableStatuses.has(tool.status) && !isIsoCalendarDate(tool.reviewedOn)) {
+      throw new RangeError(`reviewedOn must be a valid ISO calendar date for ${tool.slug}`);
+    }
     if (seen.has(tool.slug)) throw new RangeError(`duplicate tool slug: ${tool.slug}`);
     seen.add(tool.slug);
     return tool;
