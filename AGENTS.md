@@ -1,126 +1,43 @@
-# AGENTS.md
+# WebTools — shared agent entry point
 
-## Repository mission
+## Context and authority
 
-This repository powers a portfolio of independent utility websites. Each application must remain independently deployable, branded, crawlable, testable, and legally accurate while reusing shared engineering packages.
+- Read `CODEX_HANDOFF.json` immediately after this file, then README and the relevant architecture/product/design/SEO/publication documentation. Reconcile historical status against the actual registry, source, and executed evidence; inspect directory-scoped guidance.
+- Original detailed guidance is preserved unchanged in `docs/agents/operating-reference-2026-09-10.md`; applicable architecture, numeric, accessibility, SEO, monetization, and publication rules remain binding. Load detail on demand, not a duplicate constitution.
+- Preserve current owner direction and any adopted canonical control standard. Do not silently change the approved portfolio architecture or expand the ten-calculator GroundExact MVP.
 
-If you are starting implementation work, read `CODEX_HANDOFF.json` immediately after this file.
+## Project-specific boundaries
 
-## Non-negotiable architecture rules
+- Each independent brand/domain has its own `apps/<site>` and deployment project, as explicitly approved here. Reuse an existing site's canonical project/previews; a new site's approved independent project is not a forbidden duplicate. Do not collapse brands into one hostname-routed runtime without an explicit decision.
+- `portfolio/sites.json` registers identities/origins. Shared packages stay brand/domain-neutral; site copy, colors, metadata, provider IDs, and vertical-specific formulas do not leak across sites.
+- Static-first Astro and deterministic client calculation modules: no speculative database, auth/accounts, API server, CMS, queues, AI chat, ecommerce, supplier API, or live prices. Do not add a UI framework merely for calculator interactivity.
+- Formulas belong in production TypeScript modules invoked by the browser, not copied into page markup/scripts. Historical Mulch debt and newer handoff claims differ: inspect the real path before declaring it fixed or refactoring it again.
+- Use strict types, small pure functions, golden cases, invalid/edge/unit-conversion tests. Reject NaN/infinity/impossible negatives/invalid zero/out-of-range values; preserve intermediate precision and round only at result/order boundaries.
+- Do not invent rates, supplier densities, package coverage, prices, statistics, testimonials, users, or sources. Preserve explicit supplier inputs and structural/engineering limitations for wall/fence tools.
+- Mobile and accessibility are release criteria: labels, keyboard/focus, contrast, reduced motion, understandable errors, and readable text explanations rather than graphics alone.
+- No thin keyword/city/material permutation pages, hidden LLM-only content, or all-to-all reciprocal footer links. Shareable query inputs canonicalize to the base tool URL unless explicitly approved otherwise.
+- Legal/data inventories, consent, analytics, ads, affiliate disclosures, robots/sitemap/crawler policies, and structured data must match actual runtime behavior. Ads remain disabled until real provider/consent/disclosure configuration; never obscure or imitate tool controls or cause avoidable layout shift.
 
-1. Each production domain lives in its own `apps/<site>` directory.
-2. Shared packages must be domain-agnostic. Do not put GroundExact-specific copy, colors, SEO titles, or vertical-specific formulas into generic packages unless the formula is truly cross-site infrastructure.
-3. Do not route multiple brands from one runtime by hostname unless explicitly approved. Prefer one deployment project per app.
-4. Keep applications static-first. Do not add a database, authentication, API server, CMS, queues, or background jobs without an explicit product requirement.
-5. Tool formulas belong in testable TypeScript modules, never duplicated inside UI templates or page scripts.
-6. Tool result pages must render useful explanatory text, not only graphics/canvas output.
-7. Query parameters may represent shareable tool inputs, but parameterized variants must canonicalize to the base tool URL unless an explicit SEO decision says otherwise.
-8. Do not generate thin location/query/material permutation pages for SEO.
-9. Every site must have a data inventory and legal pages matching actual behavior.
-10. Ads must never obscure primary tool functionality or cause avoidable layout shift.
-11. Do not create an all-to-all reciprocal footer linking every portfolio property.
-12. Do not claim a page is live merely because source files exist.
+## Tool status and real acceptance
 
-## Tool lifecycle
+- Preserve registry authority at `apps/groundexact/src/tools/registry.ts`: planned → engine-ready → page-ready → live. Live requires all exact-commit calculation/browser/repository/SEO/publication gates in `docs/seo/groundexact-page-map.md`.
+- The engineering states implemented/wired/locally verified/hosted verified/released describe evidence, not a competing tool registry. Never promote a tool because source exists or an agent says it is ready.
+- One valuable measure → calculate → adjust → buy-information journey at a time, with explicit non-goals. Prove the actual page calls its calculation module, gives verified results, handles invalid inputs, and preserves URL hydration/reset/copy/print behavior.
+- Keep unverified pages noindexed and out of sitemap/related-live links. Verify unique metadata, canonical origin, visible methodology/assumptions/worked examples, meaningful FAQs, truthful structured data, and built-output domain isolation before promotion.
 
-GroundExact tools move through these states:
+## Existing commands and economical CI
 
-`planned → engine-ready → page-ready → live`
+- Manifest: pnpm 10.14.0 and Node >=22 <23. Reconcile exact compatible pins/lockfile with local/CI/hosting. If the lockfile is absent, intentionally generate it in a verified install, commit it, switch to frozen installs, and repeat gates; never guess readiness.
+- Existing full gate: `pnpm check` (portfolio validation, lint, typecheck, tests, build, built-output validation). Focused commands: `pnpm validate:portfolio`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm validate:dist`; dev: `pnpm dev:groundexact`.
+- Preserve browser checks at approximately 360, 390, 768, 1024, and 1440 CSS pixels, console errors, accessibility, and publication behavior. Build success is not visual or public-release proof.
+- Test behavior/defects first and prove failure before the fix. No placeholder-success scripts, swallowed errors, or silent required-check skips; demonstrate deliberate-failure detection when changing verification.
+- Ordinary tests are synthetic/deterministic with no Production credentials or paid providers. Scaffold future sites only in disposable branches/copies for factory checks; do not provision domains/providers as a test side effect.
+- Run focused local checks before coherent pushes; broaden for formulas/shared contracts, origin/publication/consent/security, dependencies/toolchains/workflows, and agent policy. Diagnose full failing logs before reruns; avoid speculative pushes, duplicate jobs, and unrelated per-site builds.
+- Prose-only routing requires an explicit allowlist; policy/executable Markdown is impact-bearing. Preserve observable required workflows and test a final gate rejecting failed/cancelled/missing required work. Cancel superseded PR checks where safe, not deployments.
+- Use least privilege, immutable action references, and untrusted/privileged separation. Check actual branch rules, canonical site projects, environment scopes, triggers, and release authority before merging; merges may publish sites.
 
-- `planned`: implementation incomplete.
-- `engine-ready`: calculation module exists but public page is incomplete.
-- `page-ready`: calculation module and public page exist but repository/build/browser/publication gates are not yet certified.
-- `live`: all required publication gates were actually executed and passed at the exact commit.
+## Handoff
 
-`apps/groundexact/src/tools/registry.ts` is the status authority.
-
-Never promote a tool to `live` without satisfying `docs/seo/groundexact-page-map.md`.
-
-## Development standards
-
-- Use TypeScript with strict mode.
-- Use test-driven development for new behavior and defects.
-- Prefer small pure functions and dependency-free calculation code.
-- Validate all numeric inputs; reject NaN, infinity, impossible negatives, zero where zero is invalid, and values outside documented ranges.
-- Round only at presentation/order boundaries. Preserve intermediate precision.
-- Every calculator requires golden-case tests plus meaningful invalid-input/edge tests. Add unit-conversion tests when the tool exposes multiple units.
-- Accessibility is a release criterion: semantic labels, keyboard usability, focus states, reduced motion, contrast, and meaningful error text.
-- Mobile is the primary calculator breakpoint.
-- No hidden tracking before consent where consent is legally required.
-- Do not invent product rates, densities, packaging coverage, prices, statistics, testimonials, users, or sources.
-
-## Known baseline debt to resolve before copying patterns
-
-The existing Mulch page predates the stricter formula-boundary rule. Its browser script currently duplicates the mulch formula instead of importing/calling `src/tools/mulch/calculate.ts`.
-
-**Required baseline fix:** refactor the Mulch page to use the production calculation module, preserve behavior with tests, and then use that corrected pattern for subsequent pages.
-
-Do not copy the duplicated formula pattern.
-
-## SEO / AI discovery rules
-
-Every certified indexable tool page requires:
-
-- unique `<title>` and meta description
-- canonical URL
-- one clear H1
-- working tool near the top of the page
-- concise answer/explanation near the tool
-- visible usage guidance
-- methodology/formula section
-- assumptions and limitations
-- at least one verified worked example
-- relevant FAQs only when genuinely useful
-- related-tool links only to relevant certified-live tools
-- source/review information where external facts are used
-- structured data only when truthful, visible where applicable, and currently supported
-
-Keep `robots.txt`, sitemap generation, OAI-SearchBot policy, GPTBot policy, and Bing/IndexNow readiness explicit in each app.
-
-Do not create LLM-only hidden content or parallel pages whose only purpose is AI indexing.
-
-## Monetization rules
-
-- The tool must work without interacting with an ad.
-- Ads default to disabled until provider IDs, consent behavior, and disclosures are configured.
-- Reserve ad dimensions to reduce layout shift.
-- Do not place ads so they appear to be form controls, result controls, download buttons, or navigation.
-- Affiliate links must be disclosed and tagged appropriately.
-- Use shared provider-neutral contracts instead of embedding vendor calls throughout calculator source.
-- Do not implement speculative monetization integrations during MVP.
-
-## GroundExact scope
-
-GroundExact is the first site and follows: **Measure → Calculate → Adjust → Buy**.
-
-MVP calculators:
-
-- mulch
-- gravel / stone
-- topsoil
-- sod
-- pavers
-- retaining wall
-- fence materials
-- fertilizer coverage
-- grass seed
-- universal material volume / cubic yards
-
-Do not expand MVP into contractor CRM, accounts, saved projects, ecommerce, supplier APIs, AI chat, or live pricing unless explicitly requested.
-
-## Required verification before claiming completion
-
-At minimum run and report exact results for:
-
-```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
-```
-
-For UI changes, also verify the rendered site in a browser at desktop and mobile widths and check the console for errors.
-
-GroundExact target widths include approximately 360, 390, 768, 1024, and 1440 CSS pixels.
-
-If you cannot execute a gate, report it as **not executed**. Never infer passing status from source inspection.
+- Preserve CODEX_HANDOFF, registry, and existing checklist/progress authorities; keep current handoff concise/evidence-linked and archive historical narrative safely. Do not introduce conflicting manual status files.
+- Fix relevant blockers/invariants, record unrelated cleanup, and report exact SHA, commands/results, checked routes/environments, status promotions, gaps, genuine owner decisions, and next smallest task.
+- Load deeper docs/skills selectively, use one implementation agent plus independent review by default, and confirm fresh Codex/Claude instruction loading. File creation alone is not foundation certification.
